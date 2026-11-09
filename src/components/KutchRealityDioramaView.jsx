@@ -73,14 +73,13 @@ const ACTS_DATA = [
   }
 ];
 
-export default function KutchRealityDioramaView({ onSelectAct, onReturnToOrbit }) {
+export default function KutchRealityDioramaView({ onSelectAct, onGoToHero, onReturnToOrbit }) {
   const [hoveredAct, setHoveredAct] = useState(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Trigger smooth cinematic black fade-out before opening Act-1
+  // Trigger smooth cinematic black fade-out before opening Act-1 (silent transition)
   const handleActClick = (act) => {
     if (isTransitioning) return;
-    soundEngine.playClick();
 
     if (act.id === 'act-1') {
       setIsTransitioning(true);
@@ -233,12 +232,18 @@ export default function KutchRealityDioramaView({ onSelectAct, onReturnToOrbit }
 
         <div className="flex items-center gap-4 text-[9px] font-mono tracking-widest uppercase text-white/60">
           <span className="hidden md:inline">23.83° N, 70.03° E • GUJARAT</span>
+          {onGoToHero && (
+            <button
+              onClick={onGoToHero}
+              onMouseEnter={() => soundEngine.playHover()}
+              className="px-4 py-1.5 rounded-full border border-white/20 bg-white/[0.04] hover:bg-white/[0.12] text-[9.5px] font-mono tracking-widest uppercase text-white transition-all cursor-pointer"
+            >
+              ↑ Hero
+            </button>
+          )}
           {onReturnToOrbit && (
             <button
-              onClick={() => {
-                soundEngine.playClick();
-                onReturnToOrbit();
-              }}
+              onClick={onReturnToOrbit}
               onMouseEnter={() => soundEngine.playHover()}
               className="px-4 py-1.5 rounded-full border border-white/20 bg-white/[0.04] hover:bg-white/[0.12] text-[9.5px] font-mono tracking-widest uppercase text-white transition-all cursor-pointer"
             >

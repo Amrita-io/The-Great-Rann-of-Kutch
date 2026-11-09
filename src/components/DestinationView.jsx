@@ -16,28 +16,79 @@ export default function DestinationView({
   const navRef = useRef(null);
   const giantTitleRef = useRef(null);
   const bottomContentRef = useRef(null);
-  const [activeAct, setActiveAct] = useState(null); // null | 'act-1'
 
-  // Pause hero video when Act 1 page is active
+  // Discrete Screen Slabs: 'hero' | 'diorama'
+  // (Zero halfway scrolling: the user is strictly in either this or that slab!)
+  const [currentSlab, setCurrentSlab] = useState('hero');
+  const [isSlabTransitioning, setIsSlabTransitioning] = useState(false);
+
+  // Dedicated full-screen sub-view for Act 1: null | 'act-1'
+  const [activeActView, setActiveActView] = useState(null);
+
+  // Audio & Video Coordination:
+  // 1. When video is playing (Home hero or Act-1 video): ZERO background music plays!
+  // 2. When home hero video ends and user enters 5 Acts island:
+  //    Play @Sounds/Home/Breath_of_the_Rann.mp3 gently in the background!
   useEffect(() => {
-    if (videoRef.current) {
-      if (activeAct) {
+    if (activeActView || currentSlab === 'hero') {
+      soundEngine.silenceAllBackgroundMusic();
+      if (videoRef.current) {
+        if (activeActView) {
+          videoRef.current.pause();
+        } else {
+          videoRef.current.play().catch(() => {});
+        }
+      }
+    } else if (currentSlab === 'diorama' && !activeActView) {
+      if (videoRef.current) {
         videoRef.current.pause();
       }
+      // User is exploring the 5 Acts island: play Breath of the Rann gently
+      soundEngine.playBreathOfTheRann(0.22);
     }
-  }, [activeAct]);
+  }, [activeActView, currentSlab]);
 
-  // Cinematic Choreography on Mount:
-  // 1. Immediately stops space drone & white noise, starts authentic Kutchi ambient.
-  // 2. Video auto-plays with audio synced to soundEngine.
-  // 3. The text 'SAANS' appears FIRST, slowly and fully like cinematography.
-  // 4. The bottom tagline and Discover button emerge.
-  // 5. The menu and everything else appear AT LAST.
+  // Clean discrete transition between Hero and Diorama slabs (Silent, smooth black cross-fade)
+  const transitionToSlab = useCallback((targetSlab) => {
+    if (isSlabTransitioning || currentSlab === targetSlab) return;
+    setIsSlabTransitioning(true);
+
+    setTimeout(() => {
+      setCurrentSlab(targetSlab);
+      setTimeout(() => {
+        setIsSlabTransitioning(false);
+      }, 100);
+    }, 500);
+  }, [currentSlab, isSlabTransitioning]);
+
+  const goToDiorama = useCallback(() => {
+    transitionToSlab('diorama');
+  }, [transitionToSlab]);
+
+  const goToHero = useCallback(() => {
+    transitionToSlab('hero');
+  }, [transitionToSlab]);
+
+  // Wheel Gesture Interception: strictly moves between discrete slabs (zero halfway scrolling!)
   useEffect(() => {
-    // Stop space drones and start authentic Kutchi audio
+    const handleWheel = (e) => {
+      if (activeActView || isSlabTransitioning) return;
+
+      if (currentSlab === 'hero' && e.deltaY > 25) {
+        goToDiorama();
+      } else if (currentSlab === 'diorama' && e.deltaY < -25) {
+        goToHero();
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [currentSlab, activeActView, isSlabTransitioning, goToDiorama, goToHero]);
+
+  // Cinematic Choreography on Mount
+  useEffect(() => {
     soundEngine.setMode('destination');
 
-    // Sync video audio with soundEngine
     if (videoRef.current) {
       videoRef.current.muted = soundEngine.isMuted;
       videoRef.current.volume = 0.75;
@@ -53,7 +104,6 @@ export default function DestinationView({
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-      // Initial States: Hidden
       gsap.set(giantTitleRef.current, {
         opacity: 0,
         scale: 0.90,
@@ -71,7 +121,6 @@ export default function DestinationView({
         y: -30
       });
 
-      // 1. FIRST: Title emerges smoothly and majestically like an opening film title
       tl.to(giantTitleRef.current, {
         opacity: 0.95,
         scale: 1.0,
@@ -81,16 +130,12 @@ export default function DestinationView({
         ease: 'power2.out',
         delay: 0.4
       })
-
-      // 2. NEXT: The bottom tagline and Discover button gently rise into frame
       .to(bottomContentRef.current, {
         opacity: 1,
         y: 0,
         duration: 1.4,
         ease: 'power2.out'
       }, "-=0.8")
-
-      // 3. AT LAST: The navigation menu appears gracefully across the top
       .to(navRef.current, {
         opacity: 1,
         y: 0,
@@ -107,7 +152,7 @@ export default function DestinationView({
   }, []);
 
   const handleReturn = () => {
-    soundEngine.playReturnSound();
+    soundEngine.silenceAllBackgroundMusic();
     soundEngine.setMode('globe');
     gsap.to(containerRef.current, {
       opacity: 0,
@@ -117,47 +162,31 @@ export default function DestinationView({
     });
   };
 
-  const hasAutoScrolled = useRef(false);
-
-  // Smooth transition from Hero to Kutch 3D Reality Diorama
-  const executeCinematicTransition = useCallback(() => {
-    if (hasAutoScrolled.current) return;
-    hasAutoScrolled.current = true;
-
-    const dioramaEl = document.getElementById('sx-kutch-reality-section');
-    if (dioramaEl) {
-      dioramaEl.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, []);
-
-  const handleDiscoverScroll = () => {
-    executeCinematicTransition();
-  };
-
-  // Auto-scroll when hero video is nearing completion
+  // Auto-switch to diorama when hero video is nearing completion
   const handleVideoTimeUpdate = () => {
-    if (hasAutoScrolled.current || !videoRef.current) return;
+    if (currentSlab !== 'hero' || !videoRef.current) return;
     const v = videoRef.current;
     if (v.duration && v.currentTime >= v.duration - 0.9) {
-      executeCinematicTransition();
+      goToDiorama();
     }
   };
 
   const handleVideoEnded = () => {
-    if (!hasAutoScrolled.current) {
-      executeCinematicTransition();
+    if (currentSlab === 'hero') {
+      goToDiorama();
     }
   };
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full bg-[#030508] text-[#f8fafc] font-['Montserrat',sans-serif] overflow-x-hidden selection:bg-white/20 selection:text-white"
+      className="relative w-screen h-screen overflow-hidden bg-[#030508] text-[#f8fafc] font-['Montserrat',sans-serif] select-none"
     >
       <style>{`
-        /* Pinned Fullscreen Hero Container */
-        .hero-container {
-          position: relative;
+        /* Pinned Fullscreen Hero Slab */
+        .hero-slab {
+          position: absolute;
+          inset: 0;
           width: 100vw;
           height: 100vh;
           overflow: hidden;
@@ -383,11 +412,14 @@ export default function DestinationView({
       `}</style>
 
       {/* ========================================================
-          FULLSCREEN HERO SCENE (Auto-Play Video & Cinematic Staging)
+          SLAB 1: FULLSCREEN HERO SCENE (Pinned 100vh Slab)
       ======================================================== */}
-      <section className="hero-container">
-        
-        {/* Native Video: Plays Once & Holds Final Frame (Auto-scrolls when nearing end) */}
+      <section
+        className={`hero-slab transition-opacity duration-500 ease-in-out ${
+          currentSlab === 'hero' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
+        }`}
+      >
+        {/* Native Video: Plays Once & Holds Final Frame */}
         <video
           ref={videoRef}
           src="/vid/WhatsApp%20Video%202026-11-09%20at%205.26.53%20PM.mp4"
@@ -408,7 +440,7 @@ export default function DestinationView({
         {/* Vignette Overlay for Text Legibility */}
         <div className="vignette-overlay" />
 
-        {/* Top Navigation Bar (Revealed AT LAST) */}
+        {/* Top Navigation Bar */}
         <nav ref={navRef} className="nav-bar">
           <ul className="nav-links">
             <li>
@@ -421,7 +453,7 @@ export default function DestinationView({
             </li>
             <li>
               <button
-                onClick={handleDiscoverScroll}
+                onClick={goToDiorama}
                 onMouseEnter={() => soundEngine.playHover()}
               >
                 Kutch
@@ -432,10 +464,7 @@ export default function DestinationView({
           <ul className="nav-links">
             <li>
               <button
-                onClick={() => {
-                  const el = document.getElementById('sx-kutch-reality-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
+                onClick={goToDiorama}
                 onMouseEnter={() => soundEngine.playHover()}
               >
                 3D Diorama
@@ -470,13 +499,13 @@ export default function DestinationView({
           </span>
         </div>
 
-        {/* Bottom Tagline & Action Button (Appears Next) */}
+        {/* Bottom Tagline & Action Button */}
         <div ref={bottomContentRef} className="bottom-content">
           <p className="tagline">
             Where the salt desert meets infinite skies — immerse in the untamed stillness of Kutch.
           </p>
           <button 
-            onClick={handleDiscoverScroll} 
+            onClick={goToDiorama} 
             onMouseEnter={() => soundEngine.playHover()}
             className="discover-btn group"
           >
@@ -484,30 +513,47 @@ export default function DestinationView({
             <span className="text-[10px] transform group-hover:translate-y-0.5 transition-transform duration-200">↓</span>
           </button>
         </div>
-
       </section>
 
       {/* ========================================================
-          KUTCH 3D REALITY DIORAMA (Editorial Cartography & Parallax)
-          (Central Map with 5 Acts)
+          SLAB 2: KUTCH 3D REALITY DIORAMA (Pinned 100vh Slab)
+          (Central Map with 5 Acts - Zero Halfway Scrolling!)
       ======================================================== */}
-      <KutchRealityDioramaView
-        onSelectAct={(actId) => {
-          if (actId === 'act-1') {
-            setActiveAct('act-1');
-          }
+      <div
+        className={`absolute inset-0 w-full h-full transition-opacity duration-500 ease-in-out ${
+          currentSlab === 'diorama' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
+        }`}
+      >
+        <KutchRealityDioramaView
+          onGoToHero={goToHero}
+          onSelectAct={(actId) => {
+            if (actId === 'act-1') {
+              setActiveActView('act-1');
+            }
+          }}
+          onReturnToOrbit={handleReturn}
+        />
+      </div>
+
+      {/* ========================================================
+          CINEMATIC BLACK CROSS-FADE OVERLAY BETWEEN SLABS
+      ======================================================== */}
+      <div
+        className="fixed inset-0 z-40 bg-[#030508] pointer-events-none transition-opacity duration-600 ease-in-out"
+        style={{
+          opacity: isSlabTransitioning ? 1 : 0,
+          visibility: isSlabTransitioning ? 'visible' : 'hidden'
         }}
-        onReturnToOrbit={handleReturn}
       />
 
       {/* ========================================================
           DEDICATED SEPARATE PAGE FOR ACT 1 (SILENCE)
-          (Independent stage, black cross-fade, auto-playing video & typography)
+          (Contains Act-1 Hero Video + Radar Showcase just below it)
       ======================================================== */}
-      {activeAct === 'act-1' && (
+      {activeActView === 'act-1' && (
         <div className="fixed inset-0 z-50 w-screen h-screen">
           <KutchAct1View
-            onBackToDiorama={() => setActiveAct(null)}
+            onBackToDiorama={() => setActiveActView(null)}
             onReturnToOrbit={handleReturn}
           />
         </div>

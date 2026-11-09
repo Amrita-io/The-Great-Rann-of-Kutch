@@ -1,47 +1,27 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { soundEngine } from '../utils/audio';
+import NisarShowcaseView from './NisarShowcaseView';
 
 export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
   const containerRef = useRef(null);
+  const heroSectionRef = useRef(null);
+  const radarSectionRef = useRef(null);
   const videoRef = useRef(null);
   const cinematicTitleRef = useRef(null);
-  const [fadeState, setFadeState] = useState('fading-in'); // Starts with black fade-in on page mount
+  const hasAutoScrolled = useRef(false);
 
-  // 1. SILENCE ALL BACKGROUND MUSIC ON ACT-1 PLAYBACK
-  const silenceAllBackgroundMusic = useCallback(() => {
-    try {
-      if (soundEngine && soundEngine.ctx) {
-        const t = soundEngine.ctx.currentTime;
-        if (soundEngine.kutchGain) {
-          soundEngine.kutchGain.gain.cancelScheduledValues(t);
-          soundEngine.kutchGain.gain.linearRampToValueAtTime(0.00001, t + 0.3);
-        }
-        if (soundEngine.spaceGain) {
-          soundEngine.spaceGain.gain.cancelScheduledValues(t);
-          soundEngine.spaceGain.gain.linearRampToValueAtTime(0.00001, t + 0.3);
-        }
-      }
-    } catch (e) {
-      console.warn('Silencing background audio:', e);
-    }
+  const [fadeState, setFadeState] = useState('fading-in'); // Black fade-in on mount
+  const [isViewingRadar, setIsViewingRadar] = useState(false);
+
+  // 1. SILENCE ALL BACKGROUND MUSIC WHEN ACT-1 HERO VIDEO IS ACTIVE
+  const silenceAll = useCallback(() => {
+    soundEngine.silenceAllBackgroundMusic();
   }, []);
 
-  const restoreBackgroundMusic = useCallback(() => {
-    try {
-      if (soundEngine && soundEngine.ctx && !soundEngine.isMuted) {
-        const t = soundEngine.ctx.currentTime;
-        if (soundEngine.kutchGain) {
-          soundEngine.kutchGain.gain.cancelScheduledValues(t);
-          soundEngine.kutchGain.gain.linearRampToValueAtTime(0.24, t + 0.8);
-        }
-      }
-    } catch (e) {}
-  }, []);
-
-  // 2. Lifecycle: Auto-play, silence music, and handle black fade-in
+  // 2. Lifecycle & Audio Management on Mount
   useEffect(() => {
-    silenceAllBackgroundMusic();
+    silenceAll();
 
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
@@ -49,16 +29,15 @@ export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
       videoRef.current.play().catch(() => {});
     }
 
-    // Fade in from black overlay
     const fadeTimer = setTimeout(() => {
       setFadeState('idle');
-    }, 650);
+    }, 600);
 
     return () => {
       clearTimeout(fadeTimer);
-      restoreBackgroundMusic();
+      silenceAll();
     };
-  }, [silenceAllBackgroundMusic, restoreBackgroundMusic]);
+  }, [silenceAll]);
 
   // Keep video audio synced with global mute control
   useEffect(() => {
@@ -66,15 +45,50 @@ export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
       if (videoRef.current) {
         videoRef.current.muted = muted;
       }
-      if (!muted) {
-        silenceAllBackgroundMusic();
+      if (!muted && !isViewingRadar) {
+        silenceAll();
       }
     });
 
     return () => unsub();
-  }, [silenceAllBackgroundMusic]);
+  }, [silenceAll, isViewingRadar]);
 
-  // 3. Cinematic Typographical Entrance Animation
+  // 3. Section Visibility Observer:
+  // - While on Hero Section (video active): ZERO background music plays!
+  // - When on Radar Showcase Section: video pauses and matching telemetry audio engages.
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.target.id === 'sx-act1-hero-section') {
+            if (entry.isIntersecting) {
+              setIsViewingRadar(false);
+              soundEngine.silenceAllBackgroundMusic();
+              if (videoRef.current) {
+                videoRef.current.play().catch(() => {});
+              }
+            } else {
+              if (videoRef.current) {
+                videoRef.current.pause();
+              }
+            }
+          } else if (entry.target.id === 'sx-act1-radar-section') {
+            if (entry.isIntersecting) {
+              setIsViewingRadar(true);
+            }
+          }
+        });
+      },
+      { threshold: 0.45 }
+    );
+
+    if (heroSectionRef.current) observer.observe(heroSectionRef.current);
+    if (radarSectionRef.current) observer.observe(radarSectionRef.current);
+
+    return () => observer.disconnect();
+  }, []);
+
+  // 4. Cinematic Typographical Entrance Animation
   useEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
@@ -100,31 +114,58 @@ export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
     return () => ctx.revert();
   }, []);
 
-  // 4. Return to Central 5-Acts Diorama via Black Fade-Out
-  const handleReturnToDiorama = useCallback(() => {
-    soundEngine.playClick();
-    setFadeState('fading-out');
+  // Smooth scroll down to Radar Showcase
+  const scrollToRadar = () => {
+    radarSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-    setTimeout(() => {
-      if (onBackToDiorama) {
-        onBackToDiorama();
-      }
-    }, 650);
-  }, [onBackToDiorama]);
+  // Smooth scroll up to Act 1 Hero
+  const scrollToHero = () => {
+    heroSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // When Act 1 video is nearing completion (~1.2s before end)
+  const handleVideoTimeUpdate = () => {
+    if (hasAutoScrolled.current || !videoRef.current) return;
+    const v = videoRef.current;
+    if (v.duration && v.currentTime >= v.duration - 1.2) {
+      hasAutoScrolled.current = true;
+      scrollToRadar();
+    }
+  };
+
+  const handleVideoEnded = () => {
+    if (!hasAutoScrolled.current) {
+      hasAutoScrolled.current = true;
+      scrollToRadar();
+    }
+  };
 
   const handleReplayVideo = () => {
-    soundEngine.playClick();
+    hasAutoScrolled.current = false;
+    scrollToHero();
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => {});
     }
   };
 
+  // Return to Central 5-Acts Diorama via Black Fade-Out
+  const handleReturnToDiorama = useCallback(() => {
+    setFadeState('fading-out');
+
+    setTimeout(() => {
+      if (onBackToDiorama) {
+        onBackToDiorama();
+      }
+    }, 700);
+  }, [onBackToDiorama]);
+
   return (
-    <section
+    <div
       ref={containerRef}
-      id="sx-act1-page"
-      className="relative w-screen h-screen overflow-hidden bg-[#030508] text-[#f8fafc] font-['Cinzel',serif] selection:bg-white/20 select-none"
+      id="sx-act1-unified-page"
+      className="relative w-screen h-screen overflow-y-auto overflow-x-hidden bg-[#030508] text-[#f8fafc] select-none scroll-smooth snap-y snap-mandatory"
     >
       <style>{`
         .sx-act1-video {
@@ -150,7 +191,7 @@ export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
 
         .sx-act1-center-cinematic {
           position: absolute;
-          top: 50%;
+          top: 48%;
           left: 50%;
           transform: translate(-50%, -50%);
           text-align: center;
@@ -174,99 +215,130 @@ export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
         }
       `}</style>
 
-      {/* Act-1 Fullscreen Video (Pure cinematic visuals) */}
-      <video
-        ref={videoRef}
-        src="/vid/Act-1/gemini_generated_video_adb97d98.mp4"
-        playsInline
-        muted={soundEngine.isMuted}
-        onEnded={(e) => {
-          e.currentTarget.pause();
-        }}
-        className="sx-act1-video"
-      >
-        <source src="/vid/Act-1/gemini_generated_video_adb97d98.mp4" type="video/mp4" />
-      </video>
-
-      {/* Deep Filmic Vignette for Text Legibility */}
-      <div className="sx-act1-vignette" />
-
       {/* ========================================================
-          TOP NAVIGATION BAR (Dedicated Page Navigation)
+          SECTION 1: ACT-1 HERO CINEMATIC VIDEO (100vh Slab)
       ======================================================== */}
-      <nav className="relative z-30 flex items-center justify-between p-4 sm:p-7 md:p-9 font-mono text-[9px] sm:text-[10px] tracking-widest uppercase text-white/80">
-        <button
-          onClick={handleReturnToDiorama}
-          onMouseEnter={() => soundEngine.playHover()}
-          className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 bg-black/40 hover:bg-white/15 backdrop-blur-md transition-all cursor-pointer text-white shadow-lg"
+      <section
+        ref={heroSectionRef}
+        id="sx-act1-hero-section"
+        className="relative w-full h-screen min-h-screen snap-start snap-always overflow-hidden font-['Cinzel',serif]"
+      >
+        {/* Fullscreen Video (Pure cinematic visuals with zero background interference) */}
+        <video
+          ref={videoRef}
+          src="/vid/Act-1/gemini_generated_video_adb97d98.mp4"
+          playsInline
+          muted={soundEngine.isMuted}
+          onTimeUpdate={handleVideoTimeUpdate}
+          onEnded={(e) => {
+            e.currentTarget.pause();
+            handleVideoEnded();
+          }}
+          className="sx-act1-video"
         >
-          <span>← 5 ACTS DIORAMA</span>
-        </button>
+          <source src="/vid/Act-1/gemini_generated_video_adb97d98.mp4" type="video/mp4" />
+        </video>
 
-        <div className="flex items-center gap-3">
+        {/* Deep Filmic Vignette for Text Legibility */}
+        <div className="sx-act1-vignette" />
+
+        {/* Top Navigation Bar */}
+        <nav className="relative z-30 flex items-center justify-between p-4 sm:p-7 md:p-9 font-mono text-[9px] sm:text-[10px] tracking-widest uppercase text-white/80">
           <button
-            onClick={handleReplayVideo}
+            onClick={handleReturnToDiorama}
             onMouseEnter={() => soundEngine.playHover()}
-            className="px-3.5 py-1.5 rounded-full border border-white/15 bg-black/40 hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer text-white/70 hover:text-white"
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 bg-black/40 hover:bg-white/15 backdrop-blur-md transition-all cursor-pointer text-white shadow-lg"
           >
-            ↻ REPLAY
+            <span>← 5 ACTS DIORAMA</span>
           </button>
-          {onReturnToOrbit && (
+
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => {
-                soundEngine.playClick();
-                onReturnToOrbit();
-              }}
+              onClick={scrollToRadar}
+              onMouseEnter={() => soundEngine.playHover()}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-cyan-400/40 bg-cyan-950/60 hover:bg-cyan-900/80 backdrop-blur-md transition-all cursor-pointer text-cyan-300 font-mono text-[9px] sm:text-[10px] tracking-widest shadow-[0_0_12px_rgba(56,189,248,0.3)]"
+            >
+              <span>RADAR SHOWCASE ↓</span>
+            </button>
+            <button
+              onClick={handleReplayVideo}
               onMouseEnter={() => soundEngine.playHover()}
               className="px-3.5 py-1.5 rounded-full border border-white/15 bg-black/40 hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer text-white/70 hover:text-white"
             >
-              ORBIT →
+              ↻ REPLAY
             </button>
-          )}
+            {onReturnToOrbit && (
+              <button
+                onClick={onReturnToOrbit}
+                onMouseEnter={() => soundEngine.playHover()}
+                className="px-3.5 py-1.5 rounded-full border border-white/15 bg-black/40 hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer text-white/70 hover:text-white"
+              >
+                ORBIT →
+              </button>
+            )}
+          </div>
+        </nav>
+
+        {/* Monumental Cinematic Typography */}
+        <div ref={cinematicTitleRef} className="sx-act1-center-cinematic">
+          <span className="font-['Montserrat',sans-serif] text-xs sm:text-sm md:text-base font-light tracking-[0.65em] text-cyan-300 uppercase mb-3 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
+            A C T — I
+          </span>
+
+          <h1 className="font-['Cinzel',serif] text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-normal tracking-[0.28em] text-white uppercase leading-none drop-shadow-[0_4px_45px_rgba(0,0,0,0.98)]">
+            SILENCE
+          </h1>
+
+          <div className="sx-cinematic-line h-[1.5px] bg-cyan-400/80 mt-6 rounded-full" />
+
+          <span className="font-['Montserrat',sans-serif] text-[9.5px] sm:text-[11px] font-light tracking-[0.45em] uppercase text-white/80 mt-5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+            THE INFINITE WHITE HORIZON
+          </span>
+
+          <p className="font-['Cormorant_Garamond',serif] text-sm sm:text-base md:text-lg italic text-slate-200/90 max-w-xl text-center mt-5 leading-relaxed drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)]">
+            "An ancient arm of the Arabian Sea surrendered to the sun, leaving behind a boundless crystalline crust. Under the desert moon, the boundaries between earth and sky quietly dissolve."
+          </p>
         </div>
-      </nav>
+
+        {/* Bottom Discovery Pill: Guides user to the Radar section directly below */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2">
+          <button
+            onClick={scrollToRadar}
+            onMouseEnter={() => soundEngine.playHover()}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-cyan-400/40 bg-black/60 hover:bg-cyan-950/70 backdrop-blur-md text-[9.5px] font-mono tracking-widest text-cyan-200 transition-all cursor-pointer shadow-[0_0_15px_rgba(56,189,248,0.25)] group"
+          >
+            <span>EXPLORE NISAR RADAR DATA</span>
+            <span className="text-cyan-400 transform group-hover:translate-y-0.5 transition-transform">↓</span>
+          </button>
+        </div>
+      </section>
 
       {/* ========================================================
-          FULL CINEMATIC CENTERPIECE: "ACT-1 SILENCE"
-          (Monumental Editorial Typography)
+          SECTION 2: NISAR RADAR SHOWCASE (Just Below Act-1 Hero)
       ======================================================== */}
-      <div ref={cinematicTitleRef} className="sx-act1-center-cinematic">
-        
-        {/* Act Number Header */}
-        <span className="font-['Montserrat',sans-serif] text-xs sm:text-sm md:text-base font-light tracking-[0.65em] text-cyan-300 uppercase mb-3 drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
-          A C T — I
-        </span>
-
-        {/* Monumental Cinematic Title */}
-        <h1 className="font-['Cinzel',serif] text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-normal tracking-[0.28em] text-white uppercase leading-none drop-shadow-[0_4px_45px_rgba(0,0,0,0.98)]">
-          SILENCE
-        </h1>
-
-        {/* Subtle Atmospheric Divider Line */}
-        <div className="sx-cinematic-line h-[1.5px] bg-cyan-400/80 mt-6 rounded-full" />
-
-        {/* Subtitle */}
-        <span className="font-['Montserrat',sans-serif] text-[9.5px] sm:text-[11px] font-light tracking-[0.45em] uppercase text-white/80 mt-5 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
-          THE INFINITE WHITE HORIZON
-        </span>
-
-        {/* Poetic Narrative Caption */}
-        <p className="font-['Cormorant_Garamond',serif] text-sm sm:text-base md:text-lg italic text-slate-200/90 max-w-xl text-center mt-5 leading-relaxed drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)]">
-          "An ancient arm of the Arabian Sea surrendered to the sun, leaving behind a boundless crystalline crust. Under the desert moon, the boundaries between earth and sky quietly dissolve."
-        </p>
-
-      </div>
+      <section
+        ref={radarSectionRef}
+        id="sx-act1-radar-section"
+        className="relative w-full min-h-screen snap-start snap-always"
+      >
+        <NisarShowcaseView
+          isActive={isViewingRadar}
+          onBackToAct1={scrollToHero}
+          onBackToDiorama={handleReturnToDiorama}
+          onReturnToOrbit={onReturnToOrbit}
+        />
+      </section>
 
       {/* ========================================================
           CINEMATIC BLACK FADE OVERLAY
       ======================================================== */}
       <div
-        className="fixed inset-0 z-50 bg-[#030508] pointer-events-none transition-opacity duration-650 ease-in-out"
+        className="fixed inset-0 z-50 bg-[#030508] pointer-events-none transition-opacity duration-700 ease-in-out"
         style={{
           opacity: fadeState === 'idle' ? 0 : 1,
           visibility: fadeState === 'idle' ? 'hidden' : 'visible'
         }}
       />
-    </section>
+    </div>
   );
 }

@@ -81,7 +81,7 @@ const STRATA_LAYERS = [
   }
 ];
 
-export default function NisarShowcaseView({ onBackToAct1, onReturnToOrbit }) {
+export default function NisarShowcaseView({ onBackToAct1, onBackToDiorama, onReturnToOrbit, isActive = false }) {
   const [selectedMode, setSelectedMode] = useState('L-BAND');
   const [selectedPol, setSelectedPol] = useState('HH');
   const [activeLayer, setActiveLayer] = useState(null);
@@ -90,11 +90,26 @@ export default function NisarShowcaseView({ onBackToAct1, onReturnToOrbit }) {
   const [showGrid, setShowGrid] = useState(true);
   const [probePos, setProbePos] = useState({ x: 50, y: 50 });
   const [isHoveringRadar, setIsHoveringRadar] = useState(false);
+  const [fadeState, setFadeState] = useState('idle');
   const radarCanvasRef = useRef(null);
   const rasterImgRef = useRef(null);
   const animationFrameRef = useRef(null);
 
   const modeData = RADAR_MODES[selectedMode];
+
+  // Activate NASA-ISRO NISAR high-tech telemetry sound track ONLY when viewing radar section
+  useEffect(() => {
+    if (isActive) {
+      soundEngine.setMode('nisar');
+    }
+  }, [isActive]);
+
+  const handleNavigate = (callback) => {
+    setFadeState('fading-out');
+    setTimeout(() => {
+      if (callback) callback();
+    }, 700);
+  };
 
   // Preload high-res calibrated SAR Granule overlay
   useEffect(() => {
@@ -331,28 +346,31 @@ export default function NisarShowcaseView({ onBackToAct1, onReturnToOrbit }) {
           >
             <span>⤓ PNG Overlay</span>
           </a>
+          {onBackToDiorama && (
+            <button
+              onClick={() => handleNavigate(onBackToDiorama)}
+              onMouseEnter={() => soundEngine.playHover()}
+              className="px-3.5 py-1.5 rounded-full border border-white/20 bg-white/[0.04] hover:bg-white/[0.12] text-[10px] font-mono tracking-widest uppercase text-white transition-all cursor-pointer"
+            >
+              ← 5 Acts Diorama
+            </button>
+          )}
           {onBackToAct1 && (
             <button
-              onClick={() => {
-                soundEngine.playClick();
-                onBackToAct1();
-              }}
+              onClick={onBackToAct1}
               onMouseEnter={() => soundEngine.playHover()}
-              className="px-4 py-1.5 rounded-full border border-white/20 bg-white/[0.04] hover:bg-white/[0.12] text-[10px] font-mono tracking-widest uppercase text-white transition-all cursor-pointer"
+              className="px-3.5 py-1.5 rounded-full border border-white/20 bg-white/[0.04] hover:bg-white/[0.12] text-[10px] font-mono tracking-widest uppercase text-white transition-all cursor-pointer"
             >
-              ↑ Replay Act-1 Video
+              ↑ Act-1 Video
             </button>
           )}
           {onReturnToOrbit && (
             <button
-              onClick={() => {
-                soundEngine.playClick();
-                onReturnToOrbit();
-              }}
+              onClick={onReturnToOrbit}
               onMouseEnter={() => soundEngine.playHover()}
-              className="px-4 py-1.5 rounded-full border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/60 text-[10px] font-mono tracking-widest uppercase text-cyan-200 transition-all cursor-pointer"
+              className="px-3.5 py-1.5 rounded-full border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/60 text-[10px] font-mono tracking-widest uppercase text-cyan-200 transition-all cursor-pointer"
             >
-              ← Return to Orbit
+              Orbit →
             </button>
           )}
         </div>
@@ -647,6 +665,17 @@ export default function NisarShowcaseView({ onBackToAct1, onReturnToOrbit }) {
           MISSION DATA PROVIDED BY NASA JPL & ISRO SAC EARTH SCIENCE
         </div>
       </footer>
+
+      {/* ========================================================
+          CINEMATIC BLACK FADE OVERLAY
+      ======================================================== */}
+      <div
+        className="fixed inset-0 z-50 bg-[#030508] pointer-events-none transition-opacity duration-700 ease-in-out"
+        style={{
+          opacity: fadeState === 'idle' ? 0 : 1,
+          visibility: fadeState === 'idle' ? 'hidden' : 'visible'
+        }}
+      />
     </section>
   );
 }

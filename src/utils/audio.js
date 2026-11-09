@@ -8,13 +8,14 @@ class SoundEngine {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('saans_audio_muted') : null;
     this.isMuted = saved === 'true'; // false by default
 
-    this.mode = 'globe'; // 'globe' | 'destination'
+    this.mode = 'globe'; // 'globe' | 'destination' | 'nisar'
     this.listeners = new Set();
 
     // Core audio nodes
     this.masterGain = null;
     this.spaceGain = null;
     this.kutchGain = null;
+    this.nisarGain = null;
 
     // Orbit / Space audio sources
     this.spaceDrone1 = null;
@@ -26,6 +27,21 @@ class SoundEngine {
     this.tanpuraIntervalId = null;
     this.bellIntervalId = null;
     this.tanpuraIndex = 0;
+
+    // NISAR Radar Telemetry timers & state
+    this.nisarChirpIntervalId = null;
+    this.nisarTelemetryIntervalId = null;
+
+    // Breath of the Rann (Authentic Atmospheric Soundtrack for 5 Acts Island)
+    this.rannAudio = null;
+    if (typeof window !== 'undefined' && typeof Audio !== 'undefined') {
+      try {
+        this.rannAudio = new Audio('/Sounds/Home/Breath_of_the_Rann.mp3');
+        this.rannAudio.loop = true;
+        this.rannAudio.volume = 0.22; // gentle, delicate, non-distracting
+        this.rannAudio.preload = 'auto';
+      } catch (e) {}
+    }
 
     this.isInitialized = false;
 
@@ -80,6 +96,9 @@ class SoundEngine {
 
       // 2. Authentic Kutchi Desert Acoustic Layer (ONLY active in Destination view - NO white/brown noise!)
       this.setupKutchDesertAmbient();
+
+      // 3. NISAR Synthetic Aperture Radar Telemetry Layer (Cal/Val orbital scientific acoustic)
+      this.setupNisarTelemetryAmbient();
 
       // Route initial mode
       this.setMode(this.mode);
@@ -351,7 +370,192 @@ class SoundEngine {
   }
 
   // ==========================================================
-  // MODE SWITCHING: Completely silences space noises in Kutch!
+  // NASA-ISRO NISAR RADAR TELEMETRY ACOUSTIC LAYER
+  // High-Tech Orbital Satellite Telemetry Sound Track:
+  // - Deep Carrier Hum (Dual L+S Band Sub-harmonic frequencies)
+  // - Periodic Microwave Radar Chirp / Frequency Sweep (every 3.8s)
+  // - Sub-second telemetry heartbeat pulse
+  // ==========================================================
+  setupNisarTelemetryAmbient() {
+    if (!this.ctx) return;
+
+    this.nisarGain = this.ctx.createGain();
+    this.nisarGain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+    this.nisarGain.connect(this.masterGain);
+
+    try {
+      // 1. Dual-carrier satellite hum: 58 Hz and 125.75 Hz (L-Band subharmonic)
+      const subOsc = this.ctx.createOscillator();
+      subOsc.type = 'sine';
+      subOsc.frequency.setValueAtTime(58.0, this.ctx.currentTime);
+
+      const harmonicOsc = this.ctx.createOscillator();
+      harmonicOsc.type = 'triangle';
+      harmonicOsc.frequency.setValueAtTime(125.75, this.ctx.currentTime);
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(220, this.ctx.currentTime);
+      filter.Q.setValueAtTime(2.5, this.ctx.currentTime);
+
+      const carrierGain = this.ctx.createGain();
+      carrierGain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+
+      subOsc.connect(carrierGain);
+      harmonicOsc.connect(carrierGain);
+      carrierGain.connect(filter);
+      filter.connect(this.nisarGain);
+
+      subOsc.start();
+      harmonicOsc.start();
+
+      // 2. Periodic Radar Chirp / Microwave Ping (every 3.8s)
+      this.nisarChirpIntervalId = setInterval(() => {
+        if (!this.ctx || this.isMuted || this.mode !== 'nisar') return;
+        this.playRadarSweepChirp();
+      }, 3800);
+
+      // 3. Telemetry Data Tick (every 1.9s)
+      this.nisarTelemetryIntervalId = setInterval(() => {
+        if (!this.ctx || this.isMuted || this.mode !== 'nisar') return;
+        this.playTelemetryPulse();
+      }, 1900);
+    } catch (e) {}
+  }
+
+  // Radar microwave chirp sweep
+  playRadarSweepChirp() {
+    if (!this.ctx || !this.nisarGain) return;
+    try {
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      // Chirp frequency sweep: 640 Hz -> 1380 Hz
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(640, t);
+      osc.frequency.exponentialRampToValueAtTime(1380, t + 0.16);
+
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(960, t);
+      filter.Q.setValueAtTime(3.5, t);
+
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.linearRampToValueAtTime(0.07, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.nisarGain);
+
+      osc.start(t);
+      osc.stop(t + 0.45);
+    } catch (e) {}
+  }
+
+  // Telemetry data heartbeat pulse
+  playTelemetryPulse() {
+    if (!this.ctx || !this.nisarGain) return;
+    try {
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(2200, t);
+
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.linearRampToValueAtTime(0.022, t + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+
+      osc.connect(gain);
+      gain.connect(this.nisarGain);
+
+      osc.start(t);
+      osc.stop(t + 0.09);
+    } catch (e) {}
+  }
+
+  // ==========================================================
+  // BREATH OF THE RANN (Soundtrack for 5 Acts Island Exploration)
+  // Gentle, authentic, non-distracting background atmosphere
+  // ==========================================================
+  playBreathOfTheRann(targetVol = 0.22) {
+    if (!this.rannAudio) return;
+    try {
+      this.rannAudio.muted = this.isMuted;
+      this.rannAudio.volume = 0.01;
+      const p = this.rannAudio.play();
+      if (p !== undefined) {
+        p.then(() => {
+          let vol = 0.01;
+          const fadeTimer = setInterval(() => {
+            if (!this.rannAudio) {
+              clearInterval(fadeTimer);
+              return;
+            }
+            vol += 0.02;
+            if (vol >= targetVol) {
+              this.rannAudio.volume = targetVol;
+              clearInterval(fadeTimer);
+            } else {
+              this.rannAudio.volume = vol;
+            }
+          }, 80);
+        }).catch(() => {});
+      }
+    } catch (e) {}
+  }
+
+  pauseBreathOfTheRann() {
+    if (!this.rannAudio) return;
+    try {
+      let vol = this.rannAudio.volume;
+      const fadeOutTimer = setInterval(() => {
+        if (!this.rannAudio) {
+          clearInterval(fadeOutTimer);
+          return;
+        }
+        vol -= 0.03;
+        if (vol <= 0.01) {
+          this.rannAudio.volume = 0;
+          this.rannAudio.pause();
+          clearInterval(fadeOutTimer);
+        } else {
+          this.rannAudio.volume = Math.max(0, vol);
+        }
+      }, 40);
+    } catch (e) {
+      if (this.rannAudio) this.rannAudio.pause();
+    }
+  }
+
+  // Ensures ZERO background music or sounds play anywhere on the site when any video is playing
+  silenceAllBackgroundMusic() {
+    if (this.rannAudio) {
+      this.rannAudio.pause();
+      this.rannAudio.currentTime = 0;
+    }
+    if (this.ctx) {
+      const t = this.ctx.currentTime;
+      if (this.kutchGain) {
+        this.kutchGain.gain.cancelScheduledValues(t);
+        this.kutchGain.gain.linearRampToValueAtTime(0.00001, t + 0.1);
+      }
+      if (this.spaceGain) {
+        this.spaceGain.gain.cancelScheduledValues(t);
+        this.spaceGain.gain.linearRampToValueAtTime(0.00001, t + 0.1);
+      }
+      if (this.nisarGain) {
+        this.nisarGain.gain.cancelScheduledValues(t);
+        this.nisarGain.gain.linearRampToValueAtTime(0.00001, t + 0.1);
+      }
+    }
+  }
+
+  // ==========================================================
+  // MODE SWITCHING: Seamlessly handles globe, destination, and nisar!
   // ==========================================================
   setMode(mode) {
     this.mode = mode;
@@ -359,36 +563,50 @@ class SoundEngine {
 
     const t = this.ctx.currentTime;
 
-    if (mode === 'destination') {
-      // 1. COMPLETELY CUT OFF SPACE DRONES & SPACE NOISES
+    if (mode === 'nisar') {
+      // 1. Cut off Kutch acoustic music & Breath of the Rann
+      this.pauseBreathOfTheRann();
+      if (this.kutchGain) {
+        this.kutchGain.gain.cancelScheduledValues(t);
+        this.kutchGain.gain.linearRampToValueAtTime(0.00001, t + 0.3);
+      }
+      // 2. Cut off orbit space drones
       if (this.spaceGain) {
         this.spaceGain.gain.cancelScheduledValues(t);
         this.spaceGain.gain.linearRampToValueAtTime(0.00001, t + 0.3);
       }
-
-      // 2. FADE IN AUTHENTIC KUTCHI ACOUSTIC AMBIENT
-      if (this.kutchGain) {
-        this.kutchGain.gain.cancelScheduledValues(t);
-        this.kutchGain.gain.linearRampToValueAtTime(0.24, t + 0.8);
+      // 3. Fade in authentic NISAR radar telemetry sound track
+      if (this.nisarGain) {
+        this.nisarGain.gain.cancelScheduledValues(t);
+        this.nisarGain.gain.linearRampToValueAtTime(0.26, t + 0.8);
       }
 
-      // Pluck immediately for instant feedback
-      setTimeout(() => {
-        if (this.mode === 'destination' && !this.isMuted) {
-          this.pluckTanpuraString(146.83); // Sa
-          this.playDesertFluteNote(293.66, 2.2); // Opening flute note
-        }
-      }, 400);
+    } else if (mode === 'destination') {
+      // 1. Cut off space drones & NISAR telemetry
+      if (this.spaceGain) {
+        this.spaceGain.gain.cancelScheduledValues(t);
+        this.spaceGain.gain.linearRampToValueAtTime(0.00001, t + 0.3);
+      }
+      if (this.nisarGain) {
+        this.nisarGain.gain.cancelScheduledValues(t);
+        this.nisarGain.gain.linearRampToValueAtTime(0.00001, t + 0.3);
+      }
+      // Note: Breath of the Rann is played exclusively when exploring the 5 Acts island!
 
     } else {
       // globe mode: return to orbit
-      // 1. FADE OUT KUTCH MUSIC
+      // 1. Cut off Kutch music & Breath of the Rann & NISAR telemetry
+      this.pauseBreathOfTheRann();
       if (this.kutchGain) {
         this.kutchGain.gain.cancelScheduledValues(t);
         this.kutchGain.gain.linearRampToValueAtTime(0.00001, t + 0.6);
       }
+      if (this.nisarGain) {
+        this.nisarGain.gain.cancelScheduledValues(t);
+        this.nisarGain.gain.linearRampToValueAtTime(0.00001, t + 0.4);
+      }
 
-      // 2. RESTORE SPACE AMBIENT FOR GLOBE
+      // 2. Restore space ambient for globe
       if (this.spaceGain) {
         this.spaceGain.gain.cancelScheduledValues(t);
         this.spaceGain.gain.linearRampToValueAtTime(0.18, t + 1.2);
@@ -407,6 +625,10 @@ class SoundEngine {
     try {
       localStorage.setItem('saans_audio_muted', this.isMuted ? 'true' : 'false');
     } catch (e) {}
+
+    if (this.rannAudio) {
+      this.rannAudio.muted = this.isMuted;
+    }
 
     if (this.masterGain && this.ctx) {
       const t = this.ctx.currentTime;
