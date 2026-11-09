@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { soundEngine } from '../utils/audio';
+import KutchInteractiveMap from './KutchInteractiveMap';
 
 export default function DestinationView({
   destination,
@@ -107,12 +108,9 @@ export default function DestinationView({
 
   const handleDiscoverScroll = () => {
     soundEngine.playDiscoverSound();
-    const el = document.getElementById('chapter1');
+    const el = document.getElementById('sx-interactive-map');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      soundEngine.playModalOpen();
-      onOpenItinerary();
     }
   };
 
@@ -397,13 +395,10 @@ export default function DestinationView({
           <ul className="nav-links">
             <li>
               <button
-                onClick={() => {
-                  soundEngine.playModalOpen();
-                  onOpenItinerary();
-                }}
+                onClick={handleDiscoverScroll}
                 onMouseEnter={() => soundEngine.playHover()}
               >
-                Expeditions
+                Terrain Map
               </button>
             </li>
             <li>
@@ -415,17 +410,6 @@ export default function DestinationView({
                 onMouseEnter={() => soundEngine.playHover()}
               >
                 Culture
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => {
-                  soundEngine.playModalOpen();
-                  onOpenBooking();
-                }}
-                onMouseEnter={() => soundEngine.playHover()}
-              >
-                Contact
               </button>
             </li>
           </ul>
@@ -464,119 +448,9 @@ export default function DestinationView({
       </section>
 
       {/* ========================================================
-          FOLLOWING SECTION: CHAPTER I - THE INFINITE EXPANSE
+          FOLLOWING SECTION: INTERACTIVE 3D DIORAMA MAP & LEADER LINES
       ======================================================== */}
-      <section 
-        id="chapter1"
-        className="relative z-20 min-h-screen bg-[#03060a] flex flex-col items-center justify-center px-6 sm:px-16 py-28 text-center border-t border-white/[0.08]"
-      >
-        <div className="max-w-5xl mx-auto flex flex-col items-center">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="w-8 h-[1px] bg-white/20" />
-            <span className="text-[10px] font-sans tracking-[0.32em] uppercase text-white/50 font-normal">
-              23.83° N, 70.03° E • GUJARAT, INDIA
-            </span>
-            <span className="w-8 h-[1px] bg-white/20" />
-          </div>
-
-          <h2 className="font-['Cinzel',serif] text-3xl sm:text-5xl lg:text-6xl text-white font-normal tracking-[0.10em] mb-6 drop-shadow-lg">
-            Chapter I: The Infinite Expanse
-          </h2>
-
-          <p className="max-w-2xl text-sm sm:text-base text-slate-300/80 leading-relaxed font-light mb-14">
-            An ancient arm of the Arabian Sea surrendered to the sun, leaving behind a 7,505 square-kilometer canvas of pure crystalline halite. Under the desert moon, the boundaries of time and horizons quietly dissolve.
-          </p>
-
-          {/* Minimalist 3 Expedition Cards: Architectural Frosted Glass */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-left">
-            
-            {/* Card 1 */}
-            <div 
-              onClick={() => {
-                soundEngine.playModalOpen();
-                onOpenItinerary();
-              }}
-              onMouseEnter={() => soundEngine.playHover()}
-              className="p-8 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/35 hover:bg-white/[0.06] hover:shadow-[0_8px_32px_rgba(0,0,0,0.6)] transition-all duration-300 cursor-pointer group"
-            >
-              <span className="text-[9px] tracking-[0.26em] uppercase text-white/45 font-sans block mb-2.5">
-                01 • EXPEDITION
-              </span>
-              <h3 className="font-['Cinzel',serif] text-lg text-white mb-2 group-hover:text-slate-100 transition-colors font-medium">
-                The White Desert Trail
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed font-light mb-6">
-                Traverse the vast salt crust at twilight and witness the legendary moonlit halo over Dhordo.
-              </p>
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/70 group-hover:text-white font-medium transition-colors">
-                <span>View Itinerary</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </div>
-
-            {/* Card 2 */}
-            <div 
-              onClick={() => {
-                soundEngine.playModalOpen();
-                onOpenCulture();
-              }}
-              onMouseEnter={() => soundEngine.playHover()}
-              className="p-8 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/35 hover:bg-white/[0.06] hover:shadow-[0_8px_32px_rgba(0,0,0,0.6)] transition-all duration-300 cursor-pointer group"
-            >
-              <span className="text-[9px] tracking-[0.26em] uppercase text-white/45 font-sans block mb-2.5">
-                02 • LIVING CRAFT
-              </span>
-              <h3 className="font-['Cinzel',serif] text-lg text-white mb-2 group-hover:text-slate-100 transition-colors font-medium">
-                Rogan & Mirror Heritage
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed font-light mb-6">
-                Encounter 400-year-old castor oil art in Nirona and master needlework by nomadic Rabari guilds.
-              </p>
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/70 group-hover:text-white font-medium transition-colors">
-                <span>Explore Culture</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </div>
-
-            {/* Card 3 */}
-            <div 
-              onClick={() => {
-                soundEngine.playModalOpen();
-                onOpenBooking();
-              }}
-              onMouseEnter={() => soundEngine.playHover()}
-              className="p-8 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/35 hover:bg-white/[0.06] hover:shadow-[0_8px_32px_rgba(0,0,0,0.6)] transition-all duration-300 cursor-pointer group"
-            >
-              <span className="text-[9px] tracking-[0.26em] uppercase text-white/45 font-sans block mb-2.5">
-                03 • SANCTUARY
-              </span>
-              <h3 className="font-['Cinzel',serif] text-lg text-white mb-2 group-hover:text-slate-100 transition-colors font-medium">
-                Royal Bhunga Living
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed font-light mb-6">
-                Circular hand-crafted mud bhungas decorated with Lippan mirror art under Bortle 1 night skies.
-              </p>
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/70 group-hover:text-white font-medium transition-colors">
-                <span>Reserve Stay</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Return to Main View Link */}
-          <div className="mt-20 pt-8 border-t border-white/10 w-full flex items-center justify-between text-xs text-slate-400">
-            <span>© Great Rann of Kutch • The Breathing Desert</span>
-            <button
-              onClick={handleReturn}
-              onMouseEnter={() => soundEngine.playHover()}
-              className="text-white/70 hover:text-white uppercase tracking-[0.2em] text-[10px] transition-colors cursor-pointer"
-            >
-              Return to Orbit ↑
-            </button>
-          </div>
-        </div>
-      </section>
+      <KutchInteractiveMap onReturnToOrbit={handleReturn} />
     </div>
   );
 }
