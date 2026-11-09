@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { soundEngine } from '../utils/audio';
 import KutchRealityDioramaView from './KutchRealityDioramaView';
+import KutchAct1View from './KutchAct1View';
 
 export default function DestinationView({
   destination,
@@ -15,6 +16,16 @@ export default function DestinationView({
   const navRef = useRef(null);
   const giantTitleRef = useRef(null);
   const bottomContentRef = useRef(null);
+  const [activeAct, setActiveAct] = useState(null); // null | 'act-1'
+
+  // Pause hero video when Act 1 page is active
+  useEffect(() => {
+    if (videoRef.current) {
+      if (activeAct) {
+        videoRef.current.pause();
+      }
+    }
+  }, [activeAct]);
 
   // Cinematic Choreography on Mount:
   // 1. Immediately stops space drone & white noise, starts authentic Kutchi ambient.
@@ -478,9 +489,29 @@ export default function DestinationView({
 
       {/* ========================================================
           KUTCH 3D REALITY DIORAMA (Editorial Cartography & Parallax)
-          (Replaces Act-1 and NISAR showcase per user specification)
+          (Central Map with 5 Acts)
       ======================================================== */}
-      <KutchRealityDioramaView onReturnToOrbit={handleReturn} />
+      <KutchRealityDioramaView
+        onSelectAct={(actId) => {
+          if (actId === 'act-1') {
+            setActiveAct('act-1');
+          }
+        }}
+        onReturnToOrbit={handleReturn}
+      />
+
+      {/* ========================================================
+          DEDICATED SEPARATE PAGE FOR ACT 1 (SILENCE)
+          (Independent stage, black cross-fade, auto-playing video & typography)
+      ======================================================== */}
+      {activeAct === 'act-1' && (
+        <div className="fixed inset-0 z-50 w-screen h-screen">
+          <KutchAct1View
+            onBackToDiorama={() => setActiveAct(null)}
+            onReturnToOrbit={handleReturn}
+          />
+        </div>
+      )}
     </div>
   );
 }
