@@ -1,18 +1,19 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { soundEngine } from '../utils/audio';
 
-// 5 Key Sequential Acts of the Kutch Narrative (Left to Right across the Diorama)
+// 5 Key Sequential Acts of the Kutch Narrative with NASA-ISRO NISAR Radar Observations
 const TERRAIN_ZONES = [
   {
     id: 'act1_white_desert',
     index: '01',
     actRoman: 'ACT I',
-    code: 'ACT I // HALITE GEOLOGY',
-    title: 'The Infinite White Desert',
-    tagline: 'PRISTINE CRYSTALLINE HALITE STRATUM',
-    desc: 'The westernmost tectonic plate of ancient seabed surrendered to the sun. An endless expanse of pure crystalline halite crust extending 7,500 square kilometers, forming an otherworldly white horizon under starlight.',
+    code: 'NASA-ISRO SAR // NISAR MISSION',
+    title: 'Act I: Silence',
+    subtitle: 'THE INFINITE WHITE DESERT // CAL/VAL SUPER-SITE',
+    tagline: 'L-BAND (24cm) & S-BAND (9cm) DUAL-FREQUENCY POLARIMETRY',
+    desc: 'The Great Rann of Kutch serves as NISAR’s premier global calibration super-site due to its ultra-flat topography (elevation variance < 0.3m across thousands of km²). Dual-frequency radar signals penetrate the crystalline halite crust to map subsurface saline aquifers and crust deformation with sub-millimeter precision.',
     nodePos: { x: 22.5, y: 48.0 }, // % coordinate on 1024x572 diorama
-    regionCode: 'HALITE-CRUST',
+    regionCode: 'NISAR-CAL/VAL',
     region: { cx: 22.5, cy: 48.0, rx: 7.5, ry: 13, rotate: 0 },
     bounds: { x: 15.5, y: 34, w: 13.5, h: 28 },
     theme: {
@@ -22,21 +23,25 @@ const TERRAIN_ZONES = [
       border: 'rgba(255, 255, 255, 0.85)',
       boxBg: 'rgba(255, 255, 255, 0.06)'
     },
+    nisarMode: 'CAL/VAL RADAR SUPER-SITE',
     metrics: [
-      { label: 'STRATUM', val: 'EVAPORITE BASIN' },
-      { label: 'PURITY', val: '98.4% NACL' },
-      { label: 'ALBEDO', val: '0.86 SOLAR' },
-      { label: 'CRUST DEPTH', val: '0.2M - 0.4M' }
+      { label: 'L-BAND BACKSCATTER', val: '-18.4 dB (HH)' },
+      { label: 'S-BAND BACKSCATTER', val: '-12.1 dB (VV)' },
+      { label: 'InSAR COHERENCE', val: '0.94 (HIGH)' },
+      { label: 'CRUST DIELECTRIC', val: '3.2 εr (NACL)' },
+      { label: 'SUB-SURFACE BRINE', val: '0.38M DEPTH' },
+      { label: 'SURFACE DEFORMATION', val: '< 0.8 MM/YR' }
     ]
   },
   {
     id: 'act2_tidal_inlets',
     index: '02',
     actRoman: 'ACT II',
-    code: 'ACT II // TIDAL HYDROLOGY',
-    title: 'Ancient Tidal Inlets',
-    tagline: 'BRACKISH CHANNELS & SECLUDED ISLETS',
-    desc: 'Deep azure waters carve through sunken rock canyons, cradling isolated golden islets. During seasonal monsoons, ocean tides surge into these channels, creating a hypersaline marine sanctuary teeming with carotenoid-rich Artemia brine shrimp.',
+    code: 'NASA-ISRO SAR // HYDROLOGIC RADAR',
+    title: 'Act II: Ancient Tidal Inlets',
+    subtitle: 'COASTAL INUNDATION & HYPERSALINE CHANNELS',
+    tagline: 'SPECULAR WATER BACKSCATTER & INUNDATION MAPPING',
+    desc: 'NISAR’s quad-polarimetric synthetic aperture radar maps tidal water intrusion and soil saturation across Kutch’s coastal inlets. Water creates near-complete forward specular reflection (-24.8 dB), delineating exact tidal boundaries through cloud cover and darkness.',
     nodePos: { x: 35.0, y: 45.5 },
     regionCode: 'TIDAL-CHANNELS',
     region: { cx: 35.0, cy: 45.5, rx: 7.5, ry: 14, rotate: 0 },
@@ -48,21 +53,25 @@ const TERRAIN_ZONES = [
       border: 'rgba(56, 189, 248, 0.85)',
       boxBg: 'rgba(56, 189, 248, 0.06)'
     },
+    nisarMode: 'INUNDATION & WATER EXTENT',
     metrics: [
-      { label: 'WATER TYPE', val: 'HYPERSALINE' },
-      { label: 'SALINITY', val: '45 - 110 PPT' },
-      { label: 'ISLETS', val: '3 ROCK REFUGES' },
-      { label: 'TIDAL SURGE', val: '+1.8M MONSOON' }
+      { label: 'WATER BACKSCATTER', val: '-24.8 dB (HH)' },
+      { label: 'INUNDATION SWATH', val: '242 KM' },
+      { label: 'WATER DIELECTRIC', val: '78.4 εr' },
+      { label: 'TIDAL ACCURACY', val: '±2.5 CM' },
+      { label: 'POLARIZATION', val: 'FULL QUAD-POL' },
+      { label: 'REPEAT CYCLE', val: '12 DAYS' }
     ]
   },
   {
     id: 'act3_crystallization',
     index: '03',
     actRoman: 'ACT III',
-    code: 'ACT III // MINERAL EXTRACTION',
-    title: 'Halite Crystallization',
-    tagline: 'TECTONIC FISSURES & ARTISANAL SALT BEDS',
-    desc: 'The central transition zone where cracked salt mudflats meet shallow evaporation pans. Indigenous Agariya salt farmers pump underground brine into clay pans, hand-raking salt crystals under the intense 45°C desert sun.',
+    code: 'NASA-ISRO SAR // MINERAL DYNAMICS',
+    title: 'Act III: Halite Crystallization',
+    subtitle: 'AGARIYA SALT EVAPORATION MATRIX',
+    tagline: 'SOLAR BRINE DIELECTRIC EVAPORATION GRADIENTS',
+    desc: 'NISAR captures the dielectric permittivity transition as saturated brine crystallizes into solid halite salt in the Agariya pans. Dielectric constant drops from 45.2 εr (brine) to 3.2 εr (salt crust), revealing evaporation rates from space.',
     nodePos: { x: 46.5, y: 46.5 },
     regionCode: 'SALT-CRUSTING',
     region: { cx: 46.5, cy: 46.5, rx: 6.5, ry: 14, rotate: 0 },
@@ -74,21 +83,25 @@ const TERRAIN_ZONES = [
       border: 'rgba(45, 212, 191, 0.85)',
       boxBg: 'rgba(45, 212, 191, 0.06)'
     },
+    nisarMode: 'DIELECTRIC PERMITTIVITY',
     metrics: [
-      { label: 'PROCESS', val: 'SOLAR BRINING' },
-      { label: 'COMMUNITY', val: 'AGARIYA GUILDS' },
-      { label: 'HARVEST', val: '8-MONTH CYCLE' },
-      { label: 'OUTPUT', val: '75% INLAND SALT' }
+      { label: 'BRINE DIELECTRIC', val: '45.2 -> 3.2 εr' },
+      { label: 'CRUST ACCRETION', val: '1.4 CM/WK' },
+      { label: 'S-BAND PHASE SHIFT', val: '38.6 DEG' },
+      { label: 'SURFACE ROUGHNESS', val: '0.6 CM' },
+      { label: 'POLARIMETRY', val: 'HH + HV' },
+      { label: 'CAL SITE STATUS', val: 'ACTIVE' }
     ]
   },
   {
     id: 'act4_living_oasis',
     index: '04',
     actRoman: 'ACT IV',
-    code: 'ACT IV // LIVING BIOSPHERE',
-    title: 'Living Oasis & Nomadic Craft',
-    tagline: 'WILDLIFE SANCTUARY & ANCESTRAL CRAFT',
-    desc: 'Where arid desert sands blossom into life. Over 50,000 Greater and Lesser Flamingos gather along wetland shores alongside the endangered Indian Wild Ass (Khur). Above the dunes, traditional Rabari patchwork quilts and mirror-work hang in the desert breeze.',
+    code: 'NASA-ISRO SAR // WETLAND POLSAR BIOMASS',
+    title: 'Act IV: Living Oasis & Nomadic Craft',
+    subtitle: 'UNESCO BIOSPHERE & FLAMINGO SANCTUARY',
+    tagline: 'POLARIMETRIC VOLUME SCATTERING & WILDLIFE HABITAT',
+    desc: 'Using Polarimetric SAR (PolSAR) decomposition, NISAR separates ground-surface reflections from vegetative canopy volume scattering in the Flamingo wetland sanctuary, tracking seasonal habitat expansion and soil moisture supporting the Indian Wild Ass.',
     nodePos: { x: 63.0, y: 47.0 },
     regionCode: 'NOMADIC-BIOSPHERE',
     region: { cx: 63.0, cy: 47.0, rx: 11.5, ry: 18, rotate: 0 },
@@ -100,21 +113,25 @@ const TERRAIN_ZONES = [
       border: 'rgba(245, 158, 11, 0.85)',
       boxBg: 'rgba(245, 158, 11, 0.06)'
     },
+    nisarMode: 'PolSAR BIOMASS & SOIL MOISTURE',
     metrics: [
-      { label: 'FAUNA', val: 'INDIAN WILD ASS' },
-      { label: 'AVIFAUNA', val: '50K+ FLAMINGOS' },
-      { label: 'HERITAGE', val: 'RABARI NEEDLEWORK' },
-      { label: 'STATUS', val: 'UNESCO BIOSPHERE' }
+      { label: 'VOLUME SCATTERING', val: '-14.2 dB (HV)' },
+      { label: 'SOIL MOISTURE', val: '34.8% VOL' },
+      { label: 'HABITAT EXTENT', val: '120 SQ KM' },
+      { label: 'POLSAR ENTROPY', val: '0.72 H' },
+      { label: 'BIOMASS DENSITY', val: '18.5 T/HA' },
+      { label: 'RESOLUTION', val: '3M x 10M' }
     ]
   },
   {
     id: 'act5_renewable_horizon',
     index: '05',
     actRoman: 'ACT V',
-    code: 'ACT V // FUTURE ENERGY',
-    title: 'The Renewable Horizon',
-    tagline: 'KHAVDA HYBRID ENERGY MATRIX',
-    desc: 'The eastern technological frontier: a futuristic geometric matrix of photovoltaic arrays and wind turbines. Generating 30 gigawatts of clean green energy across 726 square kilometers of salt wasteland, powering millions of homes across India.',
+    code: 'NASA-ISRO SAR // RENEWABLE INFRASTRUCTURE',
+    title: 'Act V: The Renewable Horizon',
+    subtitle: 'KHAVDA HYBRID ENERGY PARK',
+    tagline: 'PHOTOVOLTAIC RADAR SIGNATURE & STRUCTURAL InSAR',
+    desc: 'The Khavda Renewable Park produces high-intensity double-bounce radar dihedral returns from metallic photovoltaic mounting racks and wind turbine masts. InSAR monitors foundation subsidence across the salt platform with millimeter accuracy.',
     nodePos: { x: 79.0, y: 47.0 },
     regionCode: 'SOLAR-MATRIX',
     region: { cx: 79.0, cy: 47.0, rx: 7.0, ry: 13, rotate: 0 },
@@ -126,20 +143,24 @@ const TERRAIN_ZONES = [
       border: 'rgba(165, 180, 252, 0.85)',
       boxBg: 'rgba(165, 180, 252, 0.06)'
     },
+    nisarMode: 'DIHEDRAL SCATTER & InSAR DEFORMATION',
     metrics: [
-      { label: 'CAPACITY', val: '30 GW HYBRID' },
-      { label: 'SURFACE', val: '726 SQ KM' },
-      { label: 'TECHNOLOGY', val: 'BIFACIAL PV + WIND' },
-      { label: 'GLOBAL RANK', val: 'WORLD #1 PARK' }
+      { label: 'DIHEDRAL RETURN', val: '-4.2 dB (HH)' },
+      { label: 'InSAR SUBSIDENCE', val: '< 1.2 MM/YR' },
+      { label: 'TARGET SWATH', val: '726 SQ KM' },
+      { label: 'ARRAY COHERENCE', val: '0.88 HIGH' },
+      { label: 'RADAR CROSS-SECTION', val: '42.5 M²' },
+      { label: 'POWER CAPACITY', val: '30 GW GREEN' }
     ]
   }
 ];
 
 export default function KutchInteractiveMap({ onReturnToOrbit }) {
-  const [selectedIndex, setSelectedIndex] = useState(0); // Default to Act I (White Desert)
+  const [selectedIndex, setSelectedIndex] = useState(0); // Default to Act I (Act-1: Silence)
   const [hasEnteredView, setHasEnteredView] = useState(false);
   const [mouseTilt, setMouseTilt] = useState({ x: 0, y: 0 });
   const [isHoveringIsland, setIsHoveringIsland] = useState(false);
+  const [activeSarBand, setActiveSarBand] = useState('L-BAND'); // 'L-BAND' | 'S-BAND' | 'InSAR'
   
   // Element references for live sub-pixel vector line anchoring
   const stageRef = useRef(null);
@@ -449,45 +470,45 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
       <div className="sx-crosshair-mark" style={{ bottom: '12%', right: '6%' }} />
 
       {/* ========================================================
-          1. TOP ARCHITECTURAL HEADER & TELEMETRY
+          1. TOP ARCHITECTURAL HEADER & NISAR RADAR TELEMETRY
       ======================================================== */}
       <header className={`relative z-20 flex flex-wrap items-start justify-between gap-4 pt-1 pb-4 border-b border-white/10 transition-all duration-700 ${
         hasEnteredView ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
       }`}>
         <div>
-          <div className="flex items-center gap-2.5 mb-1.5">
+          <div className="flex items-center gap-2 mb-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="text-[9.5px] font-mono tracking-[0.32em] uppercase text-white/60">
-              TOPOGRAPHIC SURVEY // 5-ACT CARTOGRAPHY
+            <span className="text-[9.5px] font-mono tracking-[0.32em] uppercase text-cyan-400">
+              NASA-ISRO SYNTHETIC APERTURE RADAR (NISAR) // SCIENCE OBSERVATORY
             </span>
           </div>
           <h1 className="font-['Cinzel',serif] text-xl sm:text-2xl md:text-3xl text-white font-normal tracking-[0.14em]">
             GREAT RANN OF KUTCH
           </h1>
           <p className="text-[10px] font-mono tracking-[0.22em] text-white/50 uppercase mt-0.5">
-            5 GEOLOGICAL ACTS • HALITE BASIN TO RENEWABLE MATRIX
+            NISAR CAL/VAL SUPER-SITE • DUAL-BAND RADAR OBSERVATIONS ACROSS 5 ACTS
           </p>
         </div>
 
         {/* Center Specification Capsule */}
-        <div className="hidden lg:flex items-center gap-3 px-4 py-1.5 rounded-full border border-white/15 bg-white/[0.03] text-[9.5px] font-mono tracking-[0.24em] text-white/75">
-          <span>MODEL: 5-ACT STRATA DIORAMA</span>
+        <div className="hidden lg:flex items-center gap-3 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-950/20 text-[9.5px] font-mono tracking-[0.24em] text-cyan-200">
+          <span>MISSION: NISAR (NASA-ISRO)</span>
           <span className="w-1 h-1 rounded-full bg-cyan-400" />
-          <span>SCALE: 1:2500</span>
+          <span>ORBIT: 747 KM</span>
           <span className="w-1 h-1 rounded-full bg-cyan-400" />
-          <span>VIEW: ISOMETRIC ORTHO</span>
+          <span>CAL/VAL TARGET: ACT I SILENCE</span>
         </div>
 
         {/* Right Telemetry Block */}
         <div className="text-right font-mono text-[9.5px] text-white/50 space-y-0.5">
           <div className="text-white/85 tracking-widest">COORDINATES: 23.83° N, 70.03° E</div>
-          <div className="tracking-wider">SURVEY: WGS 84 • ALT: +1.5M</div>
-          <div className="text-cyan-400/70 text-[8.5px] tracking-wider uppercase font-bold">READY FOR 3D MODEL MESH DROP-IN</div>
+          <div className="tracking-wider text-cyan-400/90 font-medium">RADAR: L-BAND (NASA) + S-BAND (ISRO)</div>
+          <div className="text-white/40 text-[8.5px] tracking-wider uppercase">SWATH: 242 KM • REPEAT: 12 DAYS</div>
         </div>
       </header>
 
       {/* ========================================================
-          2. MAIN STAGE: FLOATING 5-ACT DIORAMA + CLEAN HUD INSPECTOR
+          2. MAIN STAGE: FLOATING 5-ACT DIORAMA + NISAR HUD INSPECTOR
       ======================================================== */}
       <div
         ref={stageRef}
@@ -502,7 +523,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
             <defs>
               <linearGradient id="sx-line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#ffffff" stopOpacity="0.45" />
-                <stop offset="60%" stopColor="#ffffff" stopOpacity="0.9" />
+                <stop offset="60%" stopColor="#38bdf8" stopOpacity="0.9" />
                 <stop offset="100%" stopColor="#ffffff" stopOpacity="1" />
               </linearGradient>
             </defs>
@@ -511,7 +532,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
             <path
               d={lineData.pathD}
               fill="none"
-              stroke="rgba(255, 255, 255, 0.15)"
+              stroke="rgba(56, 189, 248, 0.20)"
               strokeWidth="4"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -540,7 +561,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
             <circle cx={lineData.startX} cy={lineData.startY} r="1.8" fill="#ffffff" />
 
             {/* Joint Elbow 1 (Takeoff) */}
-            <circle cx={lineData.takeoffX} cy={lineData.takeoffY} r="1.8" fill="#ffffff" />
+            <circle cx={lineData.takeoffX} cy={lineData.takeoffY} r="1.8" fill="#38bdf8" />
 
             {/* Joint Elbow 2 (Dogleg) */}
             <circle cx={lineData.elbowX} cy={lineData.elbowY} r="2.2" fill="#ffffff" />
@@ -551,18 +572,18 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
               y={lineData.endY - 3}
               width="6"
               height="6"
-              fill="#ffffff"
+              fill="#38bdf8"
             />
 
             {/* Streaming Telemetry Photon Packet */}
-            <circle r="2.2" fill="#ffffff">
+            <circle r="2.2" fill="#38bdf8">
               <animateMotion
                 dur="2.4s"
                 repeatCount="indefinite"
                 path={lineData.pathD}
               />
             </circle>
-            <circle r="5" fill="#ffffff" opacity="0.3">
+            <circle r="5" fill="#38bdf8" opacity="0.3">
               <animateMotion
                 dur="2.4s"
                 repeatCount="indefinite"
@@ -592,19 +613,19 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                 onMouseEnter={() => soundEngine.playHover()}
                 className={`group flex items-center justify-between p-2.5 rounded-lg border text-left transition-all duration-200 cursor-pointer ${
                   isSelected
-                    ? 'bg-white/[0.12] border-white/50 text-white shadow-lg translate-x-1'
+                    ? 'bg-cyan-950/40 border-cyan-400/60 text-white shadow-lg translate-x-1'
                     : 'bg-white/[0.02] border-white/8 text-white/55 hover:text-white hover:border-white/25 hover:bg-white/[0.05]'
                 }`}
               >
                 <div className="flex items-center gap-2.5 truncate">
-                  <span className={`font-mono text-[9px] font-bold ${isSelected ? 'text-white' : 'text-white/40'}`}>
+                  <span className={`font-mono text-[9px] font-bold ${isSelected ? 'text-cyan-300' : 'text-white/40'}`}>
                     {zone.actRoman}
                   </span>
                   <span className="font-sans text-[11px] tracking-wide truncate">
                     {zone.title.replace(/^Act [I|V|X]+: /, '')}
                   </span>
                 </div>
-                <span className={`font-mono text-[8px] tracking-widest ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'}`}>
+                <span className={`font-mono text-[8px] tracking-widest ${isSelected ? 'opacity-100 text-cyan-400' : 'opacity-0 group-hover:opacity-60'}`}>
                   →
                 </span>
               </button>
@@ -747,7 +768,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                           ? 'bg-white text-black font-bold border-white shadow-md'
                           : 'bg-black/85 text-white/70 border-white/15'
                       }`}>
-                        {zone.actRoman} // {zone.title.split(' ')[0]}
+                        {zone.actRoman} // {zone.title.replace(/^Act [I|V|X]+: /, '').split(' ')[0]}
                       </span>
                     </div>
                   </div>
@@ -757,8 +778,8 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
           </div>
         </div>
 
-        {/* Right Flank: Dedicated Technical Inspector Panel (SUTÈRA Style) */}
-        <div className={`z-20 w-full lg:w-80 max-w-sm transition-all duration-700 delay-300 shrink-0 ${
+        {/* Right Flank: Dedicated NASA-ISRO NISAR Radar Science Inspector Panel */}
+        <div className={`z-20 w-full lg:w-88 max-w-sm transition-all duration-700 delay-300 shrink-0 ${
           hasEnteredView ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-6'
         }`}>
           <div className="sx-hud-glass p-5 rounded-xl border border-white/20 relative">
@@ -766,7 +787,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
             {/* Dedicated Architectural Connector Port on Left Border (Where line docks!) */}
             <div
               ref={cardPortRef}
-              className="absolute -left-[5px] top-10 w-2.5 h-2.5 rounded-[1px] bg-white border border-black shadow-[0_0_12px_rgba(255,255,255,0.95)] flex items-center justify-center z-30 pointer-events-none"
+              className="absolute -left-[5px] top-10 w-2.5 h-2.5 rounded-[1px] bg-cyan-400 border border-black shadow-[0_0_12px_rgba(56,189,248,0.95)] flex items-center justify-center z-30 pointer-events-none"
             >
               <span className="w-1 h-1 bg-black" />
             </div>
@@ -777,13 +798,16 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
             <div className="sx-corner-bracket bottom-1.5 left-1.5 border-b border-l" />
             <div className="sx-corner-bracket bottom-1.5 right-1.5 border-b border-r" />
 
-            {/* Inspector Header */}
-            <div className="flex items-center justify-between border-b border-white/12 pb-2.5 mb-3">
-              <span className="font-mono text-[9px] tracking-[0.26em] uppercase text-white/50">
-                {activeZone.code}
-              </span>
-              <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-white border border-white/20">
-                {activeZone.actRoman}
+            {/* Top NISAR Mission Status Ribbon */}
+            <div className="flex items-center justify-between border-b border-cyan-500/30 pb-2 mb-3 bg-cyan-950/20 px-2.5 py-1.5 rounded border border-cyan-500/20">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                <span className="font-mono text-[8.5px] font-bold tracking-[0.22em] uppercase text-cyan-300">
+                  NASA-ISRO NISAR OBSERVATORY
+                </span>
+              </div>
+              <span className="font-mono text-[8px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-200 border border-cyan-500/30">
+                L+S DUAL-BAND
               </span>
             </div>
 
@@ -791,21 +815,42 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
             <h2 className="font-['Cinzel',serif] text-base sm:text-lg text-white font-medium mb-1">
               {activeZone.title}
             </h2>
-            <p className="font-mono text-[8px] tracking-[0.20em] uppercase text-white/45 mb-3">
+            <p className="font-mono text-[8px] tracking-[0.20em] uppercase text-cyan-400/80 mb-2">
               {activeZone.tagline}
             </p>
 
-            {/* In-depth Geologic / Cultural Description */}
-            <p className="text-xs text-slate-300 leading-relaxed font-light mb-4">
+            {/* In-depth Radar Science Description */}
+            <p className="text-xs text-slate-300 leading-relaxed font-light mb-3">
               {activeZone.desc}
             </p>
 
+            {/* NISAR SAR Mode Selector */}
+            <div className="flex items-center gap-1.5 mb-3 font-mono text-[8px]">
+              <span className="text-white/40 uppercase tracking-wider text-[7.5px]">SAR BAND:</span>
+              {['L-BAND', 'S-BAND', 'InSAR'].map((band) => (
+                <button
+                  key={band}
+                  onClick={() => {
+                    soundEngine.playClick();
+                    setActiveSarBand(band);
+                  }}
+                  className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                    activeSarBand === band
+                      ? 'bg-cyan-400 text-black font-bold shadow'
+                      : 'bg-white/[0.04] text-white/50 border border-white/10 hover:text-white'
+                  }`}
+                >
+                  {band}
+                </button>
+              ))}
+            </div>
+
             {/* Key Telemetry Matrix Grid */}
-            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-white/10 font-mono text-[8.5px] mb-4">
+            <div className="grid grid-cols-2 gap-2 pt-2.5 border-t border-white/10 font-mono text-[8.5px] mb-4">
               {activeZone.metrics.map((m, idx) => (
                 <div key={idx} className="bg-white/[0.04] p-2 rounded border border-white/5">
-                  <span className="text-white/40 block tracking-widest text-[8px] mb-0.5">{m.label}</span>
-                  <span className="text-white/95 font-medium tracking-wider">{m.val}</span>
+                  <span className="text-white/40 block tracking-widest text-[7.5px] mb-0.5 truncate">{m.label}</span>
+                  <span className="text-cyan-200 font-medium tracking-wider">{m.val}</span>
                 </div>
               ))}
             </div>
@@ -853,7 +898,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                 onMouseEnter={() => soundEngine.playHover()}
                 className={`px-3 py-1 rounded-full font-mono text-[9px] tracking-wider uppercase transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-white text-black font-semibold shadow-lg scale-105'
+                    ? 'bg-cyan-400 text-black font-semibold shadow-lg scale-105'
                     : 'bg-white/[0.05] border border-white/10 text-white/60 hover:text-white hover:border-white/30'
                 }`}
               >
