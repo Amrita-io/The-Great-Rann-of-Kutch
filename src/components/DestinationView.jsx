@@ -1,10 +1,7 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { soundEngine } from '../utils/audio';
-import KutchAct1View from './KutchAct1View';
-import NisarShowcaseView from './NisarShowcaseView';
-// Terrain diorama map temporarily non-existent per user request
-// import KutchInteractiveMap from './KutchInteractiveMap';
+import KutchRealityDioramaView from './KutchRealityDioramaView';
 
 export default function DestinationView({
   destination,
@@ -111,21 +108,14 @@ export default function DestinationView({
 
   const hasAutoScrolled = useRef(false);
 
-  // Smooth transition from Hero to Act-1
+  // Smooth transition from Hero to Kutch 3D Reality Diorama
   const executeCinematicTransition = useCallback(() => {
     if (hasAutoScrolled.current) return;
     hasAutoScrolled.current = true;
 
-    const act1El = document.getElementById('sx-act1-section');
-    if (act1El) {
-      act1El.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, []);
-
-  const handleBackToAct1 = useCallback(() => {
-    const act1El = document.getElementById('sx-act1-section');
-    if (act1El) {
-      act1El.scrollIntoView({ behavior: 'smooth' });
+    const dioramaEl = document.getElementById('sx-kutch-reality-section');
+    if (dioramaEl) {
+      dioramaEl.scrollIntoView({ behavior: 'smooth' });
     }
   }, []);
 
@@ -432,12 +422,12 @@ export default function DestinationView({
             <li>
               <button
                 onClick={() => {
-                  const el = document.getElementById('sx-nisar-showcase');
+                  const el = document.getElementById('sx-kutch-reality-section');
                   if (el) el.scrollIntoView({ behavior: 'smooth' });
                 }}
                 onMouseEnter={() => soundEngine.playHover()}
               >
-                NISAR Data
+                3D Diorama
               </button>
             </li>
             <li>
@@ -487,31 +477,10 @@ export default function DestinationView({
       </section>
 
       {/* ========================================================
-          ACT-1 CINEMATIC SCENE (Full-screen Video & Synced Typography)
+          KUTCH 3D REALITY DIORAMA (Editorial Cartography & Parallax)
+          (Replaces Act-1 and NISAR showcase per user specification)
       ======================================================== */}
-      <KutchAct1View
-        onExploreMap={() => {
-          const showcaseEl = document.getElementById('sx-nisar-showcase');
-          if (showcaseEl) {
-            showcaseEl.scrollIntoView({ behavior: 'auto' });
-          }
-        }}
-        onBackToHero={() => {
-          if (containerRef.current) {
-            containerRef.current.scrollIntoView({ behavior: 'smooth' });
-          }
-        }}
-        onReturnToOrbit={handleReturn}
-      />
-
-      {/* ========================================================
-          NASA-ISRO NISAR SHOWCASE (Act-1 Cal/Val Science & Radar Data)
-          (Terrain diorama map temporarily non-existent per user request)
-      ======================================================== */}
-      <NisarShowcaseView
-        onBackToAct1={handleBackToAct1}
-        onReturnToOrbit={handleReturn}
-      />
+      <KutchRealityDioramaView onReturnToOrbit={handleReturn} />
     </div>
   );
 }
