@@ -108,10 +108,14 @@ export default function DestinationView({
 
   const handleDiscoverScroll = () => {
     soundEngine.playDiscoverSound();
-    const el = document.getElementById('sx-interactive-map');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+    const mapEl = document.getElementById('sx-interactive-map');
+    if (!mapEl) return;
+
+    // Trigger instant deferred load and entrance on terrain map
+    window.dispatchEvent(new CustomEvent('kutch:trigger-map-reveal'));
+
+    // Cinematic smooth transition: glide into terrain blueprint
+    mapEl.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
