@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { soundEngine } from '../utils/audio';
 import KutchInteractiveMap from './KutchInteractiveMap';
@@ -107,15 +107,13 @@ export default function DestinationView({
   };
 
   const hasAutoScrolled = useRef(false);
-  const [isPageTransitioning, setIsPageTransitioning] = useState(false);
 
-  // Cinematic page-entry transition to the 5-Acts map
+  // Smooth scroll transition to the 5-Acts map
   const executeCinematicTransition = useCallback(() => {
     if (hasAutoScrolled.current) return;
     hasAutoScrolled.current = true;
 
     soundEngine.playDiscoverSound();
-    setIsPageTransitioning(true);
 
     const mapEl = document.getElementById('sx-interactive-map');
     if (mapEl) {
@@ -123,10 +121,6 @@ export default function DestinationView({
       window.dispatchEvent(new CustomEvent('kutch:trigger-map-reveal'));
       mapEl.scrollIntoView({ behavior: 'smooth' });
     }
-
-    setTimeout(() => {
-      setIsPageTransitioning(false);
-    }, 1400);
   }, []);
 
   const handleDiscoverScroll = () => {
@@ -482,18 +476,6 @@ export default function DestinationView({
         </div>
 
       </section>
-
-      {/* ========================================================
-          CINEMATIC TRANSITION OVERLAY ("Entered Another Page" Feel)
-      ======================================================== */}
-      {isPageTransitioning && (
-        <div className="fixed inset-0 z-50 pointer-events-none bg-black/75 backdrop-blur-[8px] flex flex-col items-center justify-center transition-all duration-700">
-          <div className="flex items-center gap-3 px-6 py-3 rounded-full border border-white/20 bg-black/90 text-[10.5px] font-mono tracking-[0.28em] uppercase text-white shadow-2xl animate-pulse">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-            <span>ENTERING THE 5 ACTS OF KUTCH // TOPOGRAPHIC CARTOGRAPHY</span>
-          </div>
-        </div>
-      )}
 
       {/* ========================================================
           FOLLOWING SECTION: INTERACTIVE 3D DIORAMA MAP & LEADER LINES
