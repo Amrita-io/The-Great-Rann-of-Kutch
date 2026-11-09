@@ -8,6 +8,7 @@ export default function KutchAct1View({ onExploreMap }) {
   const cinematicTitleRef = useRef(null);
   const hasShiftedToNISAR = useRef(false);
   const [hasEnteredView, setHasEnteredView] = useState(false);
+  const [fadeState, setFadeState] = useState('idle'); // 'idle' | 'fading-out' | 'fading-in'
 
   // 1. SILENCE ALL OTHER MUSIC WHEN THIS VIDEO PLAYS
   const silenceAllBackgroundMusic = useCallback(() => {
@@ -119,18 +120,31 @@ export default function KutchAct1View({ onExploreMap }) {
     return () => ctx.revert();
   }, [hasEnteredView]);
 
-  // 4. SHIFT USER TO NISAR DATA AS VIDEO IS ALMOST ABOUT TO END
+  // 4. SHIFT USER TO NISAR DATA AS VIDEO IS ALMOST ABOUT TO END (BLACK FADE OUT -> BLACK FADE IN)
   const handleShiftToNISAR = useCallback(() => {
     if (hasShiftedToNISAR.current) return;
     hasShiftedToNISAR.current = true;
 
-    soundEngine.playDiscoverSound();
-    const mapEl = document.getElementById('sx-interactive-map');
-    if (mapEl) {
-      window.dispatchEvent(new CustomEvent('kutch:trigger-map-reveal'));
-      mapEl.scrollIntoView({ behavior: 'smooth' });
-    }
-    if (onExploreMap) onExploreMap();
+    // 1. Silent Black Fade Out (Fade out Act-1 video to pure black)
+    setFadeState('fading-out');
+
+    // 2. While screen is fully faded to black, shift viewport to the NISAR showcase page
+    setTimeout(() => {
+      const mapEl = document.getElementById('sx-interactive-map');
+      if (mapEl) {
+        window.dispatchEvent(new CustomEvent('kutch:trigger-map-reveal'));
+        mapEl.scrollIntoView({ behavior: 'auto' });
+      }
+      if (onExploreMap) onExploreMap();
+
+      // 3. Black Fade In from pure black to reveal the NISAR showcase
+      setFadeState('fading-in');
+
+      // Complete transition cycle
+      setTimeout(() => {
+        setFadeState('idle');
+      }, 700);
+    }, 650);
   }, [onExploreMap]);
 
   // Trigger shift at ~9.2s of 10s video (when video is almost about to end)
@@ -249,6 +263,18 @@ export default function KutchAct1View({ onExploreMap }) {
         </span>
 
       </div>
+
+      {/* ========================================================
+          CINEMATIC BLACK FADE OUT / BLACK FADE IN OVERLAY
+      ======================================================== */}
+      <div
+        className="fixed inset-0 z-50 bg-[#030508] pointer-events-none"
+        style={{
+          opacity: (fadeState === 'fading-out') ? 1 : 0,
+          transition: 'opacity 650ms cubic-bezier(0.4, 0, 0.2, 1)',
+          visibility: (fadeState === 'idle') ? 'hidden' : 'visible'
+        }}
+      />
     </section>
   );
 }

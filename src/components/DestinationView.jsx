@@ -114,8 +114,6 @@ export default function DestinationView({
     if (hasAutoScrolled.current) return;
     hasAutoScrolled.current = true;
 
-    soundEngine.playDiscoverSound();
-
     const act1El = document.getElementById('sx-act1-section');
     if (act1El) {
       act1El.scrollIntoView({ behavior: 'smooth' });
