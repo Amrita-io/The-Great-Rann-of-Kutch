@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { soundEngine } from '../utils/audio';
+import KutchAct1View from './KutchAct1View';
 import KutchInteractiveMap from './KutchInteractiveMap';
 
 export default function DestinationView({
@@ -108,18 +109,16 @@ export default function DestinationView({
 
   const hasAutoScrolled = useRef(false);
 
-  // Smooth scroll transition to the 5-Acts map
+  // Smooth transition from Hero to Act-1
   const executeCinematicTransition = useCallback(() => {
     if (hasAutoScrolled.current) return;
     hasAutoScrolled.current = true;
 
     soundEngine.playDiscoverSound();
 
-    const mapEl = document.getElementById('sx-interactive-map');
-    if (mapEl) {
-      // Trigger instant deferred load and entrance on 5-Acts diorama map
-      window.dispatchEvent(new CustomEvent('kutch:trigger-map-reveal'));
-      mapEl.scrollIntoView({ behavior: 'smooth' });
+    const act1El = document.getElementById('sx-act1-section');
+    if (act1El) {
+      act1El.scrollIntoView({ behavior: 'smooth' });
     }
   }, []);
 
@@ -478,7 +477,26 @@ export default function DestinationView({
       </section>
 
       {/* ========================================================
-          FOLLOWING SECTION: INTERACTIVE 3D DIORAMA MAP & LEADER LINES
+          ACT-1 CINEMATIC SCENE (Full-screen Video & Synced Typography)
+      ======================================================== */}
+      <KutchAct1View
+        onExploreMap={() => {
+          const mapEl = document.getElementById('sx-interactive-map');
+          if (mapEl) {
+            window.dispatchEvent(new CustomEvent('kutch:trigger-map-reveal'));
+            mapEl.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+        onBackToHero={() => {
+          if (containerRef.current) {
+            containerRef.current.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+        onReturnToOrbit={handleReturn}
+      />
+
+      {/* ========================================================
+          5-ACTS INTERACTIVE DIORAMA MAP & LEADER LINES
       ======================================================== */}
       <KutchInteractiveMap onReturnToOrbit={handleReturn} />
     </div>
