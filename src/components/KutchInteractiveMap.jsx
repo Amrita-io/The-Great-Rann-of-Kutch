@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { soundEngine } from '../utils/audio';
 
 // 5 Key Geographic & Cultural Hotspots on the Kutch Diorama Island
+// Enhanced with Regional Topographic Highlight Footprints & CAD Focus Bounds
 const TERRAIN_ZONES = [
   {
     id: 'lagoon',
@@ -11,6 +12,16 @@ const TERRAIN_ZONES = [
     tagline: 'SHALLOW BRACKISH CHANNELS & MIGRATORY HAVEN',
     desc: 'Western coastal depression sculpted by seasonal tidal sea waters. A vital hypersaline wetland harboring over 50,000 Lesser and Greater Flamingos feeding on carotenoid-rich Artemia brine shrimp.',
     nodePos: { x: 33, y: 46 }, // % coordinate on 2:1 transparent island
+    regionCode: 'AQUATIC-ESTUARY',
+    region: { cx: 33, cy: 46, rx: 11, ry: 17, rotate: -15 },
+    bounds: { x: 23, y: 27, w: 20, h: 38 },
+    theme: {
+      accent: '#38bdf8', // vivid sky cyan
+      glow: 'rgba(56, 189, 248, 0.55)',
+      glowSubtle: 'rgba(14, 165, 233, 0.22)',
+      border: 'rgba(56, 189, 248, 0.75)',
+      boxBg: 'rgba(56, 189, 248, 0.05)'
+    },
     metrics: [
       { label: 'SALINITY', val: '45-120 PPT' },
       { label: 'SPECIES', val: 'PHOENICOPTERUS' },
@@ -26,6 +37,16 @@ const TERRAIN_ZONES = [
     tagline: 'PURE CRYSTALLINE HALITE GEOMETRY',
     desc: 'The central hyper-arid plateau of hardened sodium chloride crust, formed by intense solar evaporation of an ancient arm of the Arabian Sea. Extends into an infinite celestial white horizon under starlight.',
     nodePos: { x: 50, y: 41 },
+    regionCode: 'HALITE-CRUST',
+    region: { cx: 50, cy: 41, rx: 13, ry: 15, rotate: 0 },
+    bounds: { x: 38, y: 25, w: 24, h: 32 },
+    theme: {
+      accent: '#ffffff', // crystalline white
+      glow: 'rgba(255, 255, 255, 0.65)',
+      glowSubtle: 'rgba(255, 255, 255, 0.25)',
+      border: 'rgba(255, 255, 255, 0.85)',
+      boxBg: 'rgba(255, 255, 255, 0.06)'
+    },
     metrics: [
       { label: 'TOTAL AREA', val: '7,505 KM²' },
       { label: 'ALBEDO', val: '0.84 HIGH' },
@@ -41,6 +62,16 @@ const TERRAIN_ZONES = [
     tagline: 'EARTHQUAKE-RESISTANT CYLINDRICAL DWELLINGS',
     desc: 'Elevated north-eastern rock terrace hosting ancestral circular mud Bhungas with conical thatched roofs. The thick clay walls insulate against 50°C summer heat, adorned with intricate Lippan mirror relief art.',
     nodePos: { x: 69, y: 25 },
+    regionCode: 'BHUNGA-SETTLEMENT',
+    region: { cx: 69, cy: 25, rx: 9, ry: 12, rotate: 15 },
+    bounds: { x: 60, y: 13, w: 18, h: 25 },
+    theme: {
+      accent: '#fbbf24', // terracotta amber
+      glow: 'rgba(251, 191, 36, 0.55)',
+      glowSubtle: 'rgba(245, 158, 11, 0.22)',
+      border: 'rgba(251, 191, 36, 0.75)',
+      boxBg: 'rgba(251, 191, 36, 0.05)'
+    },
     metrics: [
       { label: 'STRUCTURE', val: 'CIRCULAR CLAY' },
       { label: 'CRAFT', val: 'LIPPAN MIRROR' },
@@ -56,6 +87,16 @@ const TERRAIN_ZONES = [
     tagline: 'ARTISANAL GEOMETRIC BRINE BEDS',
     desc: 'South-eastern matrix of shallow rectangular evaporation pans bounded by raised clay dykes. Indigenous Agariya salt farmers pump underground supersaturated brine, hand-raking salt crystals under the sun.',
     nodePos: { x: 65, y: 60 },
+    regionCode: 'SOLAR-EVAPORATION',
+    region: { cx: 65, cy: 60, rx: 9, ry: 12, rotate: -8 },
+    bounds: { x: 56, y: 48, w: 18, h: 24 },
+    theme: {
+      accent: '#2dd4bf', // brine teal
+      glow: 'rgba(45, 212, 191, 0.55)',
+      glowSubtle: 'rgba(20, 184, 166, 0.22)',
+      border: 'rgba(45, 212, 191, 0.75)',
+      boxBg: 'rgba(45, 212, 191, 0.05)'
+    },
     metrics: [
       { label: 'PROCESS', val: 'SOLAR CRUSTING' },
       { label: 'FARMERS', val: 'AGARIYA GUILDS' },
@@ -71,6 +112,16 @@ const TERRAIN_ZONES = [
     tagline: 'HISTORICAL NOMADIC PASSAGE',
     desc: 'Compacted arid silt and thorn-scrub ridges navigated by Dromedary camel caravans, historically carrying rock salt, natural block-printed textiles, and spices across the Rann borderlands.',
     nodePos: { x: 45, y: 57 },
+    regionCode: 'NOMADIC-CORRIDOR',
+    region: { cx: 45, cy: 57, rx: 11, ry: 9, rotate: -5 },
+    bounds: { x: 35, y: 48, w: 20, h: 19 },
+    theme: {
+      accent: '#f59e0b', // desert gold
+      glow: 'rgba(245, 158, 11, 0.55)',
+      glowSubtle: 'rgba(217, 119, 6, 0.22)',
+      border: 'rgba(245, 158, 11, 0.75)',
+      boxBg: 'rgba(245, 158, 11, 0.05)'
+    },
     metrics: [
       { label: 'TRANSIT', val: 'CAMELUS DROMEDARIUS' },
       { label: 'TERRAIN', val: 'ARID SILT / SCRUB' },
@@ -95,7 +146,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
 
   // Line coordinates state
   const [lineData, setLineData] = useState(null);
-  const [stageDimensions, setStageDimensions] = useState({ width: 1000, height: 600 });
+  const [stageDimensions, setStageDimensions] = useState({ width: 1200, height: 650 });
 
   const activeZone = TERRAIN_ZONES[selectedIndex];
 
@@ -266,14 +317,14 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
       ref={sectionRef}
       id="sx-interactive-map"
       onMouseMove={handleMouseMove}
-      className="sx-map-canvas relative w-full min-h-screen bg-[#030508] text-white overflow-hidden flex flex-col justify-between p-4 sm:p-7 md:p-9 select-none"
+      className="sx-map-canvas relative w-full min-h-screen bg-[#030508] text-white overflow-hidden flex flex-col justify-between p-3 sm:p-6 md:p-8 select-none"
     >
       <style>{`
         /* Scoped Technical Blueprint & HUD Styles with sx- Prefix */
         .sx-map-canvas {
           font-family: 'Inter', system-ui, -apple-system, sans-serif;
           background-image: 
-            radial-gradient(circle at center, rgba(12, 18, 28, 0.45) 0%, rgba(3, 5, 8, 0.98) 80%),
+            radial-gradient(circle at 50% 45%, rgba(18, 28, 44, 0.55) 0%, rgba(3, 5, 8, 0.98) 78%),
             linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
             linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
           background-size: 100% 100%, 40px 40px, 40px 40px;
@@ -305,9 +356,9 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
         }
 
         .sx-hud-glass {
-          background: rgba(7, 10, 16, 0.88);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          background: rgba(7, 10, 16, 0.90);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
           border: 1px solid rgba(255, 255, 255, 0.16);
           box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85);
         }
@@ -341,13 +392,57 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
           height: 6px;
           border-color: rgba(255, 255, 255, 0.65);
         }
+
+        /* Active Region Luminous Highlight & Breathing Animation */
+        .sx-active-region-glow {
+          animation: sx-glow-pulse 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes sx-glow-pulse {
+          0% {
+            opacity: 0.70;
+            transform: translate(-50%, -50%) scale(0.97);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.04);
+          }
+        }
+
+        /* Architectural CAD Region Box Animation */
+        .sx-cad-region-box {
+          animation: sx-box-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes sx-box-in {
+          from {
+            opacity: 0;
+            transform: scale(0.96);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        /* Scanning Shimmer Beam Across Active Region */
+        .sx-scanline-shimmer {
+          animation: sx-shimmer-sweep 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes sx-shimmer-sweep {
+          0% { transform: translateY(-100%); opacity: 0; }
+          25% { opacity: 0.75; }
+          75% { opacity: 0.75; }
+          100% { transform: translateY(220%); opacity: 0; }
+        }
       `}</style>
 
       {/* Decorative Blueprint Corner Crosshairs */}
-      <div className="sx-crosshair-mark" style={{ top: '12%', left: '8%' }} />
-      <div className="sx-crosshair-mark" style={{ top: '12%', right: '8%' }} />
-      <div className="sx-crosshair-mark" style={{ bottom: '12%', left: '8%' }} />
-      <div className="sx-crosshair-mark" style={{ bottom: '12%', right: '8%' }} />
+      <div className="sx-crosshair-mark" style={{ top: '12%', left: '6%' }} />
+      <div className="sx-crosshair-mark" style={{ top: '12%', right: '6%' }} />
+      <div className="sx-crosshair-mark" style={{ bottom: '12%', left: '6%' }} />
+      <div className="sx-crosshair-mark" style={{ bottom: '12%', right: '6%' }} />
 
       {/* ========================================================
           1. TOP ARCHITECTURAL HEADER & TELEMETRY
@@ -392,13 +487,13 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
       ======================================================== */}
       <div
         ref={stageRef}
-        className="relative z-10 flex-1 flex flex-col lg:flex-row items-center justify-between my-2 md:my-4 w-full max-w-7xl mx-auto gap-6 min-h-[520px]"
+        className="relative z-10 flex-1 flex flex-col lg:flex-row items-center justify-between my-2 md:my-3 w-full max-w-[1580px] mx-auto px-2 sm:px-6 gap-6 min-h-[580px] lg:min-h-[640px]"
       >
         {/* Full-Stage SVG Vector Leader Line Overlay */}
         {hasEnteredView && lineData && (
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none z-20 overflow-visible"
-            viewBox={`0 0 ${stageDimensions.width || 1000} ${stageDimensions.height || 600}`}
+            viewBox={`0 0 ${stageDimensions.width || 1200} ${stageDimensions.height || 650}`}
           >
             <defs>
               <linearGradient id="sx-line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -474,7 +569,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
         )}
 
         {/* Left Flank: Technical Index (SUTÈRA Inspired Index Column) */}
-        <div className={`hidden md:flex flex-col space-y-2.5 z-20 w-56 transition-all duration-700 delay-200 ${
+        <div className={`hidden md:flex flex-col space-y-2 z-20 w-52 transition-all duration-700 delay-200 shrink-0 ${
           hasEnteredView ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'
         }`}>
           <div className="flex items-center gap-2 mb-1">
@@ -513,15 +608,18 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
           })}
         </div>
 
-        {/* Center Canvas: Floating Transparent Island with Connecting Vector Line */}
-        <div className="relative flex-1 w-full flex items-center justify-center min-h-[400px] sm:min-h-[480px]">
+        {/* Center Canvas: Magnified Floating Transparent Island with Regional Highlighting */}
+        <div className="relative flex-1 w-full flex items-center justify-center min-h-[460px] sm:min-h-[560px] lg:min-h-[620px] px-2 sm:px-4">
           
-          {/* Ambient Ground Depth Shadow Beneath Floating Island */}
-          <div className="absolute w-[85%] max-w-[700px] h-[80px] bottom-8 bg-radial from-black/85 via-black/40 to-transparent blur-2xl pointer-events-none" />
+          {/* Celestial Ambient Backlight Aura (Illuminates the Island Silhouettes & Relief) */}
+          <div className="absolute w-[92%] max-w-[1020px] h-[82%] -top-4 rounded-full bg-radial from-white/[0.09] via-cyan-400/[0.035] to-transparent blur-3xl pointer-events-none" />
+
+          {/* Broad Ground Depth Shadow Beneath Floating Island */}
+          <div className="absolute w-[88%] max-w-[920px] h-[95px] bottom-6 bg-radial from-black/92 via-black/45 to-transparent blur-2xl pointer-events-none" />
 
           {/* Interactive Floating Island Container with 3D Mouse Parallax */}
           <div
-            className="sx-island-viewport relative w-full max-w-[840px] aspect-[2/1] flex items-center justify-center"
+            className="sx-island-viewport relative w-full max-w-[980px] xl:max-w-[1100px] 2xl:max-w-[1220px] aspect-[2/1] flex items-center justify-center"
             style={{
               transform: `perspective(1400px) rotateX(${mouseTilt.y}deg) rotateY(${mouseTilt.x}deg)`
             }}
@@ -532,14 +630,79 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
               hasEnteredView ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-6'
             }`}>
               
-              {/* High-Resolution Transparent Island Diorama */}
+              {/* High-Resolution Transparent Island Diorama (Enhanced contrast, brightness, and drop shadows) */}
               {hasEnteredView && (
                 <img
                   src="/assets/kutch_island_transparent.png"
                   alt="Great Rann of Kutch Floating 3D Island Diorama"
-                  className="w-full h-full object-contain filter drop-shadow-[0_20px_45px_rgba(0,0,0,0.85)] pointer-events-none"
+                  className="w-full h-full object-contain filter drop-shadow-[0_28px_56px_rgba(0,0,0,0.92)] drop-shadow-[0_0_35px_rgba(255,255,255,0.08)] contrast-[1.1] brightness-[1.08] pointer-events-none transition-all duration-500"
                   loading="lazy"
                 />
+              )}
+
+              {/* ========================================================
+                  ACTIVE REGION HIGHLIGHT LAYERS
+                  (Luminous Biome Glow + CAD Architectural Bounding Box)
+              ======================================================== */}
+              {hasEnteredView && activeZone && (
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                  
+                  {/* Layer 1: Luminous Topographic Biome Glow */}
+                  <div
+                    key={`glow-${activeZone.id}`}
+                    className="absolute rounded-full transition-all duration-700 pointer-events-none sx-active-region-glow"
+                    style={{
+                      left: `${activeZone.region.cx}%`,
+                      top: `${activeZone.region.cy}%`,
+                      width: `${activeZone.region.rx * 2}%`,
+                      height: `${activeZone.region.ry * 2}%`,
+                      transform: `translate(-50%, -50%) rotate(${activeZone.region.rotate || 0}deg)`,
+                      background: `radial-gradient(ellipse at center, ${activeZone.theme.glow} 0%, ${activeZone.theme.glowSubtle} 48%, transparent 76%)`,
+                      filter: 'blur(9px)',
+                      mixBlendMode: 'screen'
+                    }}
+                  />
+
+                  {/* Layer 2: Precision Architectural CAD Bounding Box (SUTÈRA Style) */}
+                  <div
+                    key={`cad-${activeZone.id}`}
+                    className="absolute transition-all duration-500 pointer-events-none border border-dashed rounded-[2px] sx-cad-region-box"
+                    style={{
+                      left: `${activeZone.bounds.x}%`,
+                      top: `${activeZone.bounds.y}%`,
+                      width: `${activeZone.bounds.w}%`,
+                      height: `${activeZone.bounds.h}%`,
+                      borderColor: activeZone.theme.border,
+                      backgroundColor: activeZone.theme.boxBg,
+                      boxShadow: `0 0 25px ${activeZone.theme.glowSubtle}`
+                    }}
+                  >
+                    {/* 4 Precision Corner Brackets */}
+                    <span className="absolute -top-1 -left-1 w-2.5 h-2.5 border-t-2 border-l-2" style={{ borderColor: activeZone.theme.accent }} />
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 border-t-2 border-r-2" style={{ borderColor: activeZone.theme.accent }} />
+                    <span className="absolute -bottom-1 -left-1 w-2.5 h-2.5 border-b-2 border-l-2" style={{ borderColor: activeZone.theme.accent }} />
+                    <span className="absolute -bottom-1 -right-1 w-2.5 h-2.5 border-b-2 border-r-2" style={{ borderColor: activeZone.theme.accent }} />
+
+                    {/* Sector Identification Capsule Header */}
+                    <div className="absolute -top-4 left-2 px-1.5 py-0.5 rounded-[2px] bg-black/90 border border-white/20 font-mono text-[7px] tracking-wider uppercase text-white/90 flex items-center gap-1.5 shadow-md">
+                      <span className="w-1.5 h-1.5 rounded-full animate-ping" style={{ backgroundColor: activeZone.theme.accent }} />
+                      <span className="font-bold">SEC-{activeZone.index}</span>
+                      <span className="text-white/40">//</span>
+                      <span className="text-white/70">{activeZone.regionCode}</span>
+                    </div>
+
+                    {/* Scanning Laser Shimmer Beam across Sector */}
+                    <div className="absolute inset-0 overflow-hidden rounded-[2px]">
+                      <div
+                        className="w-full h-1/2 sx-scanline-shimmer"
+                        style={{
+                          background: `linear-gradient(to bottom, transparent, ${activeZone.theme.glowSubtle}, transparent)`
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                </div>
               )}
 
               {/* Interactive Target Reticles on the Island Surface */}
@@ -558,17 +721,17 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                     className="absolute transform -translate-x-1/2 -translate-y-1/2 z-30 cursor-pointer group"
                   >
                     {/* Pulsing Radar Ring when active */}
-                    <span className={`absolute inset-0 w-7 h-7 -m-1.5 rounded-full border border-white/80 sx-pulse-ring pointer-events-none ${
+                    <span className={`absolute inset-0 w-8 h-8 -m-2 rounded-full border border-white/80 sx-pulse-ring pointer-events-none ${
                       isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'
                     }`} />
 
                     {/* Precision Square Reticle with Center Dot */}
                     <div className={`relative flex items-center justify-center transition-all duration-300 ${
                       isSelected
-                        ? 'w-3.5 h-3.5 border border-white bg-white/20 shadow-[0_0_14px_rgba(255,255,255,0.95)]'
+                        ? 'w-4 h-4 border border-white bg-white/20 shadow-[0_0_16px_rgba(255,255,255,0.95)]'
                         : 'w-2.5 h-2.5 border border-white/50 bg-black/80 group-hover:border-white group-hover:scale-115'
                     }`}>
-                      <div className={`w-1 h-1 ${isSelected ? 'bg-white' : 'bg-white/70 group-hover:bg-white'}`} />
+                      <div className={`w-1.5 h-1.5 ${isSelected ? 'bg-white' : 'bg-white/70 group-hover:bg-white'}`} />
                     </div>
 
                     {/* Architectural Micro-Annotation Tag */}
@@ -591,7 +754,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
         </div>
 
         {/* Right Flank: Dedicated Technical Inspector Panel (SUTÈRA Style) */}
-        <div className={`z-20 w-full lg:w-80 max-w-sm transition-all duration-700 delay-300 ${
+        <div className={`z-20 w-full lg:w-80 max-w-sm transition-all duration-700 delay-300 shrink-0 ${
           hasEnteredView ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-6'
         }`}>
           <div className="sx-hud-glass p-5 rounded-xl border border-white/20 relative">
