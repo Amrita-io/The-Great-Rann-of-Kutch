@@ -50,6 +50,7 @@ export default function KutchAct1View({ onExploreMap }) {
       ([entry]) => {
         if (entry.isIntersecting) {
           setHasEnteredView(true);
+          hasShiftedToNISAR.current = false;
           silenceAllBackgroundMusic();
           if (videoRef.current) {
             videoRef.current.currentTime = 0;
@@ -130,10 +131,9 @@ export default function KutchAct1View({ onExploreMap }) {
 
     // 2. While screen is fully faded to black, shift viewport to the NISAR showcase page
     setTimeout(() => {
-      const mapEl = document.getElementById('sx-interactive-map');
-      if (mapEl) {
-        window.dispatchEvent(new CustomEvent('kutch:trigger-map-reveal'));
-        mapEl.scrollIntoView({ behavior: 'auto' });
+      const showcaseEl = document.getElementById('sx-nisar-showcase');
+      if (showcaseEl) {
+        showcaseEl.scrollIntoView({ behavior: 'auto' });
       }
       if (onExploreMap) onExploreMap();
 

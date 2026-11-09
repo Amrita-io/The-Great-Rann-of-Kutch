@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { soundEngine } from '../utils/audio';
 import KutchAct1View from './KutchAct1View';
-import KutchInteractiveMap from './KutchInteractiveMap';
+import NisarShowcaseView from './NisarShowcaseView';
+// Terrain diorama map temporarily non-existent per user request
+// import KutchInteractiveMap from './KutchInteractiveMap';
 
 export default function DestinationView({
   destination,
@@ -114,6 +116,13 @@ export default function DestinationView({
     if (hasAutoScrolled.current) return;
     hasAutoScrolled.current = true;
 
+    const act1El = document.getElementById('sx-act1-section');
+    if (act1El) {
+      act1El.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
+
+  const handleBackToAct1 = useCallback(() => {
     const act1El = document.getElementById('sx-act1-section');
     if (act1El) {
       act1El.scrollIntoView({ behavior: 'smooth' });
@@ -422,10 +431,13 @@ export default function DestinationView({
           <ul className="nav-links">
             <li>
               <button
-                onClick={handleDiscoverScroll}
+                onClick={() => {
+                  const el = document.getElementById('sx-nisar-showcase');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
                 onMouseEnter={() => soundEngine.playHover()}
               >
-                Terrain Map
+                NISAR Data
               </button>
             </li>
             <li>
@@ -479,10 +491,9 @@ export default function DestinationView({
       ======================================================== */}
       <KutchAct1View
         onExploreMap={() => {
-          const mapEl = document.getElementById('sx-interactive-map');
-          if (mapEl) {
-            window.dispatchEvent(new CustomEvent('kutch:trigger-map-reveal'));
-            mapEl.scrollIntoView({ behavior: 'smooth' });
+          const showcaseEl = document.getElementById('sx-nisar-showcase');
+          if (showcaseEl) {
+            showcaseEl.scrollIntoView({ behavior: 'auto' });
           }
         }}
         onBackToHero={() => {
@@ -494,9 +505,13 @@ export default function DestinationView({
       />
 
       {/* ========================================================
-          5-ACTS INTERACTIVE DIORAMA MAP & LEADER LINES
+          NASA-ISRO NISAR SHOWCASE (Act-1 Cal/Val Science & Radar Data)
+          (Terrain diorama map temporarily non-existent per user request)
       ======================================================== */}
-      <KutchInteractiveMap onReturnToOrbit={handleReturn} />
+      <NisarShowcaseView
+        onBackToAct1={handleBackToAct1}
+        onReturnToOrbit={handleReturn}
+      />
     </div>
   );
 }
