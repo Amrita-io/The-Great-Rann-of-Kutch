@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { soundEngine } from '../utils/audio';
 
 // 5 Key Geographic & Cultural Hotspots on the Kutch Diorama Island
@@ -10,8 +10,7 @@ const TERRAIN_ZONES = [
     title: 'Flamingo Lagoon Inlets',
     tagline: 'SHALLOW BRACKISH CHANNELS & MIGRATORY HAVEN',
     desc: 'Western coastal depression sculpted by seasonal tidal sea waters. A vital hypersaline wetland harboring over 50,000 Lesser and Greater Flamingos feeding on carotenoid-rich Artemia brine shrimp.',
-    nodePos: { x: 31, y: 44 }, // % coordinate on 2:1 transparent island
-    lineEnd: { x: 62, y: 32 },  // target coordinate for HUD line connection
+    nodePos: { x: 33, y: 46 }, // % coordinate on 2:1 transparent island
     metrics: [
       { label: 'SALINITY', val: '45-120 PPT' },
       { label: 'SPECIES', val: 'PHOENICOPTERUS' },
@@ -27,7 +26,6 @@ const TERRAIN_ZONES = [
     tagline: 'PURE CRYSTALLINE HALITE GEOMETRY',
     desc: 'The central hyper-arid plateau of hardened sodium chloride crust, formed by intense solar evaporation of an ancient arm of the Arabian Sea. Extends into an infinite celestial white horizon under starlight.',
     nodePos: { x: 50, y: 41 },
-    lineEnd: { x: 62, y: 32 },
     metrics: [
       { label: 'TOTAL AREA', val: '7,505 KM²' },
       { label: 'ALBEDO', val: '0.84 HIGH' },
@@ -42,8 +40,7 @@ const TERRAIN_ZONES = [
     title: 'Rabari Bhunga Plateau',
     tagline: 'EARTHQUAKE-RESISTANT CYLINDRICAL DWELLINGS',
     desc: 'Elevated north-eastern rock terrace hosting ancestral circular mud Bhungas with conical thatched roofs. The thick clay walls insulate against 50°C summer heat, adorned with intricate Lippan mirror relief art.',
-    nodePos: { x: 68, y: 25 },
-    lineEnd: { x: 62, y: 32 },
+    nodePos: { x: 69, y: 25 },
     metrics: [
       { label: 'STRUCTURE', val: 'CIRCULAR CLAY' },
       { label: 'CRAFT', val: 'LIPPAN MIRROR' },
@@ -58,8 +55,7 @@ const TERRAIN_ZONES = [
     title: 'Agariya Solar Salt Pans',
     tagline: 'ARTISANAL GEOMETRIC BRINE BEDS',
     desc: 'South-eastern matrix of shallow rectangular evaporation pans bounded by raised clay dykes. Indigenous Agariya salt farmers pump underground supersaturated brine, hand-raking salt crystals under the sun.',
-    nodePos: { x: 65, y: 61 },
-    lineEnd: { x: 62, y: 32 },
+    nodePos: { x: 65, y: 60 },
     metrics: [
       { label: 'PROCESS', val: 'SOLAR CRUSTING' },
       { label: 'FARMERS', val: 'AGARIYA GUILDS' },
@@ -74,8 +70,7 @@ const TERRAIN_ZONES = [
     title: 'Southern Camel Caravans',
     tagline: 'HISTORICAL NOMADIC PASSAGE',
     desc: 'Compacted arid silt and thorn-scrub ridges navigated by Dromedary camel caravans, historically carrying rock salt, natural block-printed textiles, and spices across the Rann borderlands.',
-    nodePos: { x: 44, y: 58 },
-    lineEnd: { x: 62, y: 32 },
+    nodePos: { x: 45, y: 57 },
     metrics: [
       { label: 'TRANSIT', val: 'CAMELUS DROMEDARIUS' },
       { label: 'TERRAIN', val: 'ARID SILT / SCRUB' },
@@ -90,7 +85,17 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
   const [hasEnteredView, setHasEnteredView] = useState(false);
   const [mouseTilt, setMouseTilt] = useState({ x: 0, y: 0 });
   const [isHoveringIsland, setIsHoveringIsland] = useState(false);
+  
+  // Element references for live sub-pixel vector line anchoring
+  const stageRef = useRef(null);
+  const nodeRefs = useRef([]);
+  const cardPortRef = useRef(null);
   const sectionRef = useRef(null);
+  const rafRef = useRef(null);
+
+  // Line coordinates state
+  const [lineData, setLineData] = useState(null);
+  const [stageDimensions, setStageDimensions] = useState({ width: 1000, height: 600 });
 
   const activeZone = TERRAIN_ZONES[selectedIndex];
 
@@ -136,13 +141,119 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [hasEnteredView]);
 
+  // Dynamic Sub-Pixel CAD Leader Line Math (Calculated live in Stage Coordinate Space)
+  const updateLineGeometry = useCallback(() => {
+    if (!stageRef.current || !cardPortRef.current) return;
+    const activeNodeEl = nodeRefs.current[selectedIndex];
+    if (!activeNodeEl) return;
+
+    const stageRect = stageRef.current.getBoundingClientRect();
+    if (stageRect.width === 0 || stageRect.height === 0) return;
+
+    setStageDimensions({ width: stageRect.width, height: stageRect.height });
+
+    const nodeRect = activeNodeEl.getBoundingClientRect();
+    const portRect = cardPortRef.current.getBoundingClientRect();
+
+    // Live coordinates relative to stage
+    const startX = nodeRect.left + nodeRect.width / 2 - stageRect.left;
+    const startY = nodeRect.top + nodeRect.height / 2 - stageRect.top;
+
+    const endX = portRect.left + portRect.width / 2 - stageRect.left;
+    const endY = portRect.top + portRect.height / 2 - stageRect.top;
+
+    // Desktop: Card is to the right of node
+    if (endX > startX + 35) {
+      const takeoffX = startX + 24;
+      const takeoffY = startY;
+      const dy = Math.abs(endY - startY);
+
+      // Clean 45-degree angle
+      let elbowX = takeoffX + dy;
+      if (elbowX > endX - 35) {
+        elbowX = Math.max(takeoffX + 16, endX - 35);
+      }
+      const elbowY = endY;
+
+      const pathD = `M ${startX.toFixed(1)} ${startY.toFixed(1)} L ${takeoffX.toFixed(1)} ${takeoffY.toFixed(1)} L ${elbowX.toFixed(1)} ${elbowY.toFixed(1)} L ${endX.toFixed(1)} ${endY.toFixed(1)}`;
+
+      setLineData({
+        pathD,
+        startX,
+        startY,
+        takeoffX,
+        takeoffY,
+        elbowX,
+        elbowY,
+        endX,
+        endY,
+        mode: 'horizontal'
+      });
+    } else {
+      // Mobile / Stacked layout (Card is below the island)
+      const takeoffX = startX;
+      const takeoffY = startY + 20;
+      const dx = Math.abs(endX - startX);
+
+      let elbowY = takeoffY + dx;
+      if (elbowY > endY - 25) {
+        elbowY = Math.max(takeoffY + 15, endY - 25);
+      }
+      const elbowX = endX;
+
+      const pathD = `M ${startX.toFixed(1)} ${startY.toFixed(1)} L ${takeoffX.toFixed(1)} ${takeoffY.toFixed(1)} L ${elbowX.toFixed(1)} ${elbowY.toFixed(1)} L ${endX.toFixed(1)} ${endY.toFixed(1)}`;
+
+      setLineData({
+        pathD,
+        startX,
+        startY,
+        takeoffX,
+        takeoffY,
+        elbowX,
+        elbowY,
+        endX,
+        endY,
+        mode: 'vertical'
+      });
+    }
+  }, [selectedIndex]);
+
+  // Recalculate line geometry on state change, resize, and layout settlement
+  useEffect(() => {
+    if (!hasEnteredView) return;
+
+    updateLineGeometry();
+    const t1 = setTimeout(updateLineGeometry, 80);
+    const t2 = setTimeout(updateLineGeometry, 260);
+
+    const handleResize = () => updateLineGeometry();
+    window.addEventListener('resize', handleResize);
+
+    let resizeObserver = null;
+    if (stageRef.current && window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(() => updateLineGeometry());
+      resizeObserver.observe(stageRef.current);
+    }
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener('resize', handleResize);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
+  }, [hasEnteredView, selectedIndex, updateLineGeometry]);
+
   // Smooth subtle mouse tilt for 3D depth
   const handleMouseMove = (e) => {
     if (!sectionRef.current || !hasEnteredView) return;
     const rect = sectionRef.current.getBoundingClientRect();
     const nx = (e.clientX - rect.left) / rect.width - 0.5;
     const ny = (e.clientY - rect.top) / rect.height - 0.5;
-    setMouseTilt({ x: nx * 10, y: ny * -8 });
+    setMouseTilt({ x: nx * 6, y: ny * -5 });
+
+    // Smoothly keep vector line locked during 3D parallax tilt
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(updateLineGeometry);
   };
 
   const selectZone = (index) => {
@@ -202,7 +313,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
         }
 
         .sx-island-viewport {
-          transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+          transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
           will-change: transform;
         }
 
@@ -213,15 +324,6 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
         @keyframes sx-float-bob {
           0% { transform: translateY(-3px) rotate(0.15deg); }
           100% { transform: translateY(5px) rotate(-0.15deg); }
-        }
-
-        .sx-draw-line {
-          stroke-dasharray: 4 4;
-          animation: sx-line-flow 12s linear infinite;
-        }
-
-        @keyframes sx-line-flow {
-          to { stroke-dashoffset: -120; }
         }
 
         .sx-pulse-ring {
@@ -288,10 +390,91 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
       {/* ========================================================
           2. MAIN STAGE: FLOATING 3D ISLAND + CLEAN HUD INSPECTOR
       ======================================================== */}
-      <div className="relative z-10 flex-1 flex flex-col lg:flex-row items-center justify-between my-2 md:my-4 w-full max-w-7xl mx-auto gap-6 min-h-[520px]">
-        
+      <div
+        ref={stageRef}
+        className="relative z-10 flex-1 flex flex-col lg:flex-row items-center justify-between my-2 md:my-4 w-full max-w-7xl mx-auto gap-6 min-h-[520px]"
+      >
+        {/* Full-Stage SVG Vector Leader Line Overlay */}
+        {hasEnteredView && lineData && (
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none z-20 overflow-visible"
+            viewBox={`0 0 ${stageDimensions.width || 1000} ${stageDimensions.height || 600}`}
+          >
+            <defs>
+              <linearGradient id="sx-line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.45" />
+                <stop offset="60%" stopColor="#ffffff" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity="1" />
+              </linearGradient>
+            </defs>
+
+            {/* Ambient Soft Glow Halo */}
+            <path
+              d={lineData.pathD}
+              fill="none"
+              stroke="rgba(255, 255, 255, 0.15)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+
+            {/* Crisp Solid Architectural Hairline */}
+            <path
+              d={lineData.pathD}
+              fill="none"
+              stroke="url(#sx-line-grad)"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+
+            {/* Origin Pip on Island Node */}
+            <rect
+              x={lineData.startX - 5}
+              y={lineData.startY - 5}
+              width="10"
+              height="10"
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="1.2"
+            />
+            <circle cx={lineData.startX} cy={lineData.startY} r="1.8" fill="#ffffff" />
+
+            {/* Joint Elbow 1 (Takeoff) */}
+            <circle cx={lineData.takeoffX} cy={lineData.takeoffY} r="1.8" fill="#ffffff" />
+
+            {/* Joint Elbow 2 (Dogleg) */}
+            <circle cx={lineData.elbowX} cy={lineData.elbowY} r="2.2" fill="#ffffff" />
+
+            {/* Docking Terminal at HUD Port */}
+            <rect
+              x={lineData.endX - 3}
+              y={lineData.endY - 3}
+              width="6"
+              height="6"
+              fill="#ffffff"
+            />
+
+            {/* Streaming Telemetry Photon Packet */}
+            <circle r="2.2" fill="#ffffff">
+              <animateMotion
+                dur="2.4s"
+                repeatCount="indefinite"
+                path={lineData.pathD}
+              />
+            </circle>
+            <circle r="5" fill="#ffffff" opacity="0.3">
+              <animateMotion
+                dur="2.4s"
+                repeatCount="indefinite"
+                path={lineData.pathD}
+              />
+            </circle>
+          </svg>
+        )}
+
         {/* Left Flank: Technical Index (SUTÈRA Inspired Index Column) */}
-        <div className={`hidden md:flex flex-col space-y-2.5 z-20 w-64 transition-all duration-700 delay-200 ${
+        <div className={`hidden md:flex flex-col space-y-2.5 z-20 w-56 transition-all duration-700 delay-200 ${
           hasEnteredView ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'
         }`}>
           <div className="flex items-center gap-2 mb-1">
@@ -331,57 +514,14 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
         </div>
 
         {/* Center Canvas: Floating Transparent Island with Connecting Vector Line */}
-        <div className="relative flex-1 w-full flex items-center justify-center min-h-[380px] sm:min-h-[460px]">
+        <div className="relative flex-1 w-full flex items-center justify-center min-h-[400px] sm:min-h-[480px]">
           
           {/* Ambient Ground Depth Shadow Beneath Floating Island */}
-          <div className="absolute w-[80%] max-w-[650px] h-[75px] bottom-10 bg-radial from-black/85 via-black/40 to-transparent blur-2xl pointer-events-none" />
-
-          {/* SVG Vector Leader Line (Cleanly connects the active node to the inspector card) */}
-          {hasEnteredView && (
-            <svg
-              className="absolute inset-0 w-full h-full pointer-events-none z-20"
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-            >
-              <g className="transition-all duration-300">
-                {/* Clean Dogleg Polyline */}
-                <polyline
-                  points={`
-                    ${activeZone.nodePos.x},${activeZone.nodePos.y} 
-                    ${activeZone.nodePos.x > 50 ? activeZone.nodePos.x + 8 : activeZone.nodePos.x - 8},${activeZone.nodePos.y - 12} 
-                    ${activeZone.lineEnd.x},${activeZone.lineEnd.y}
-                  `}
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="0.28"
-                  className="sx-draw-line"
-                />
-
-                {/* Node Target Box Joint */}
-                <rect
-                  x={activeZone.nodePos.x - 0.75}
-                  y={activeZone.nodePos.y - 0.75}
-                  width="1.5"
-                  height="1.5"
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="0.3"
-                />
-
-                {/* Elbow Pivot Joint Pip */}
-                <circle
-                  cx={activeZone.nodePos.x > 50 ? activeZone.nodePos.x + 8 : activeZone.nodePos.x - 8}
-                  cy={activeZone.nodePos.y - 12}
-                  r="0.45"
-                  fill="#ffffff"
-                />
-              </g>
-            </svg>
-          )}
+          <div className="absolute w-[85%] max-w-[700px] h-[80px] bottom-8 bg-radial from-black/85 via-black/40 to-transparent blur-2xl pointer-events-none" />
 
           {/* Interactive Floating Island Container with 3D Mouse Parallax */}
           <div
-            className="sx-island-viewport relative w-full max-w-[780px] aspect-[2/1] flex items-center justify-center"
+            className="sx-island-viewport relative w-full max-w-[840px] aspect-[2/1] flex items-center justify-center"
             style={{
               transform: `perspective(1400px) rotateX(${mouseTilt.y}deg) rotateY(${mouseTilt.x}deg)`
             }}
@@ -408,6 +548,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                 return (
                   <div
                     key={zone.id}
+                    ref={(el) => (nodeRefs.current[idx] = el)}
                     onClick={() => selectZone(idx)}
                     onMouseEnter={() => soundEngine.playHover()}
                     style={{
@@ -417,27 +558,31 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                     className="absolute transform -translate-x-1/2 -translate-y-1/2 z-30 cursor-pointer group"
                   >
                     {/* Pulsing Radar Ring when active */}
-                    <span className={`absolute inset-0 w-6 h-6 -m-1.5 rounded-full border border-white/80 sx-pulse-ring ${
-                      isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'
+                    <span className={`absolute inset-0 w-7 h-7 -m-1.5 rounded-full border border-white/80 sx-pulse-ring pointer-events-none ${
+                      isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'
                     }`} />
 
-                    {/* Precision Square Reticle with Corner Brackets */}
-                    <div className={`relative w-3.5 h-3.5 border transition-all duration-300 flex items-center justify-center ${
+                    {/* Precision Square Reticle with Center Dot */}
+                    <div className={`relative flex items-center justify-center transition-all duration-300 ${
                       isSelected
-                        ? 'border-white bg-white scale-125 shadow-[0_0_16px_rgba(255,255,255,0.95)]'
-                        : 'border-white/55 bg-black/85 group-hover:border-white group-hover:scale-115'
+                        ? 'w-3.5 h-3.5 border border-white bg-white/20 shadow-[0_0_14px_rgba(255,255,255,0.95)]'
+                        : 'w-2.5 h-2.5 border border-white/50 bg-black/80 group-hover:border-white group-hover:scale-115'
                     }`}>
-                      <div className={`w-1 h-1 ${isSelected ? 'bg-black' : 'bg-white/80'}`} />
+                      <div className={`w-1 h-1 ${isSelected ? 'bg-white' : 'bg-white/70 group-hover:bg-white'}`} />
                     </div>
 
-                    {/* Index Tag */}
-                    <span className={`absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-1.5 py-0.5 rounded font-mono text-[7.5px] tracking-widest uppercase transition-all whitespace-nowrap ${
-                      isSelected
-                        ? 'bg-white text-black font-bold shadow-md'
-                        : 'bg-black/90 text-white/50 border border-white/10 group-hover:text-white'
+                    {/* Architectural Micro-Annotation Tag */}
+                    <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-1.5 flex flex-col items-center pointer-events-none transition-all duration-300 ${
+                      isSelected ? 'opacity-100 scale-100' : 'opacity-55 group-hover:opacity-100 group-hover:scale-105'
                     }`}>
-                      {zone.index}
-                    </span>
+                      <span className={`px-1.5 py-0.5 rounded font-mono text-[7.5px] tracking-widest uppercase border whitespace-nowrap ${
+                        isSelected
+                          ? 'bg-white text-black font-bold border-white shadow-md'
+                          : 'bg-black/85 text-white/70 border-white/15'
+                      }`}>
+                        {zone.index} // {zone.title.split(' ')[0]}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
@@ -451,6 +596,14 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
         }`}>
           <div className="sx-hud-glass p-5 rounded-xl border border-white/20 relative">
             
+            {/* Dedicated Architectural Connector Port on Left Border (Where line docks!) */}
+            <div
+              ref={cardPortRef}
+              className="absolute -left-[5px] top-10 w-2.5 h-2.5 rounded-[1px] bg-white border border-black shadow-[0_0_12px_rgba(255,255,255,0.95)] flex items-center justify-center z-30 pointer-events-none"
+            >
+              <span className="w-1 h-1 bg-black" />
+            </div>
+
             {/* Architectural Corner Accent Notches */}
             <div className="sx-corner-bracket top-1.5 left-1.5 border-t border-l" />
             <div className="sx-corner-bracket top-1.5 right-1.5 border-t border-r" />
