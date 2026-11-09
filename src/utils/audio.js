@@ -539,17 +539,17 @@ class SoundEngine {
     }
     if (this.ctx) {
       const t = this.ctx.currentTime;
-      if (this.kutchGain) {
-        this.kutchGain.gain.cancelScheduledValues(t);
-        this.kutchGain.gain.linearRampToValueAtTime(0.00001, t + 0.1);
-      }
       if (this.spaceGain) {
         this.spaceGain.gain.cancelScheduledValues(t);
-        this.spaceGain.gain.linearRampToValueAtTime(0.00001, t + 0.1);
+        this.spaceGain.gain.setValueAtTime(0.00001, t);
+      }
+      if (this.kutchGain) {
+        this.kutchGain.gain.cancelScheduledValues(t);
+        this.kutchGain.gain.setValueAtTime(0.00001, t);
       }
       if (this.nisarGain) {
         this.nisarGain.gain.cancelScheduledValues(t);
-        this.nisarGain.gain.linearRampToValueAtTime(0.00001, t + 0.1);
+        this.nisarGain.gain.setValueAtTime(0.00001, t);
       }
     }
   }
@@ -954,42 +954,14 @@ class SoundEngine {
     } catch (e) {}
   }
 
-  // Ascending cinematic chord on dive into Kutch
+  // Mutes out orbit background music on dive into Kutch
   playTransitionSound() {
-    if (this.isMuted) return;
-    this.init();
-    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
-
-    const notes = [146.83, 220.0, 293.66, 369.99, 440.0, 587.33];
-    notes.forEach((freq, idx) => {
-      setTimeout(() => {
-        this.playChime(freq, 'sine', 2.4 - idx * 0.15, 0.16);
-      }, idx * 110);
-    });
-
-    // Switch mode to authentic Kutch music (kills space drone!)
-    setTimeout(() => {
-      this.setMode('destination');
-    }, 700);
+    this.silenceAllBackgroundMusic();
   }
 
-  // Descending chord on return to orbit
+  // Silent return to orbit
   playReturnSound() {
-    if (this.isMuted) return;
-    this.init();
-    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
-
-    const notes = [587.33, 440.0, 369.99, 293.66, 220.0, 146.83];
-    notes.forEach((freq, idx) => {
-      setTimeout(() => {
-        this.playChime(freq, 'sine', 2.2, 0.14);
-      }, idx * 100);
-    });
-
-    // Switch mode back to orbit space ambient
-    setTimeout(() => {
-      this.setMode('globe');
-    }, 600);
+    this.silenceAllBackgroundMusic();
   }
 
   // Ascending Kutchi Raga Chime (Sa - Ga - Pa) for modal drawers

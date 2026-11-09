@@ -862,8 +862,8 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
     setIsTransitioning(true);
     isAutoRotatingRef.current = false;
 
-    // Start transition music
-    soundEngine.playTransitionSound();
+    // Immediately mute/fade out orbit background music when user clicks Start Story!
+    soundEngine.silenceAllBackgroundMusic();
 
     const currentY = earthGroupRef.current ? earthGroupRef.current.rotation.y : currentRotationRef.current.y;
     const targetY = getShortestAngle(currentY, KUTCH_ROT_Y);
@@ -921,12 +921,7 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
       }, 1.3);
     }
 
-    // 4. Beacon ping as India and Kutch lock into center
-    tl.add(() => {
-      soundEngine.playBeaconPing();
-    }, 1.8);
-
-    // 5. Seamless blur & crossfade into destination
+    // 4. Seamless blur & crossfade into destination
     if (mountRef.current) {
       tl.to(mountRef.current, {
         opacity: 0,
@@ -944,7 +939,8 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
     setIsTransitioning(true);
     isAutoRotatingRef.current = false;
 
-    soundEngine.playTransitionSound();
+    // Immediately mute/fade out orbit background music
+    soundEngine.silenceAllBackgroundMusic();
 
     const camera = cameraRef.current;
     
@@ -982,10 +978,6 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
         onUpdate: () => camera.updateProjectionMatrix()
       }, "-=1.35");
     }
-
-    timeline.add(() => {
-      soundEngine.playBeaconPing();
-    }, 0.8);
 
     timeline.to(mountRef.current, {
       opacity: 0,
