@@ -85,14 +85,25 @@ export default function NisarShowcaseView({ onBackToAct1, onReturnToOrbit }) {
   const [selectedMode, setSelectedMode] = useState('L-BAND');
   const [selectedPol, setSelectedPol] = useState('HH');
   const [activeLayer, setActiveLayer] = useState(null);
+  const [showRaster, setShowRaster] = useState(true);
   const [showSweep, setShowSweep] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
   const [probePos, setProbePos] = useState({ x: 50, y: 50 });
   const [isHoveringRadar, setIsHoveringRadar] = useState(false);
   const radarCanvasRef = useRef(null);
+  const rasterImgRef = useRef(null);
   const animationFrameRef = useRef(null);
 
   const modeData = RADAR_MODES[selectedMode];
+
+  // Preload high-res calibrated SAR Granule overlay
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/assets/kutch_act1_silence_overlay.png';
+    img.onload = () => {
+      rasterImgRef.current = img;
+    };
+  }, []);
 
   // Dynamic Canvas Rendering for Synthetic Aperture Radar Simulation
   useEffect(() => {
@@ -109,6 +120,14 @@ export default function NisarShowcaseView({ onBackToAct1, onReturnToOrbit }) {
       // Dark radar screen background
       ctx.fillStyle = '#04070d';
       ctx.fillRect(0, 0, w, h);
+
+      // Draw real calibrated SAR Granule overlay (specular null & halite basin)
+      if (showRaster && rasterImgRef.current) {
+        ctx.save();
+        ctx.globalAlpha = 0.82;
+        ctx.drawImage(rasterImgRef.current, 0, 0, w, h);
+        ctx.restore();
+      }
 
       if (selectedMode === 'L-BAND') {
         // L-Band: Deep radar penetration with subsurface aquifer contours
@@ -221,7 +240,7 @@ export default function NisarShowcaseView({ onBackToAct1, onReturnToOrbit }) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [selectedMode, showSweep, showGrid, activeLayer]);
+  }, [selectedMode, showRaster, showSweep, showGrid, activeLayer]);
 
   // Handle probe crosshair movement over radar viewer
   const handleMouseMove = (e) => {
@@ -294,8 +313,24 @@ export default function NisarShowcaseView({ onBackToAct1, onReturnToOrbit }) {
           <span>CYCLE: 12-DAY REPEAT</span>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3">
+        {/* Action Buttons & GIS Exports */}
+        <div className="flex items-center gap-2.5">
+          <a
+            href="/assets/kutch_act1_silence_clipped.tif"
+            download="kutch_act1_silence_clipped.tif"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/60 text-[9.5px] font-mono tracking-wider uppercase text-cyan-200 transition-all"
+            title="Download Clipped GeoTIFF (WGS84 EPSG:4326) for QGIS/ArcGIS"
+          >
+            <span>⤓ GeoTIFF (GIS)</span>
+          </a>
+          <a
+            href="/assets/kutch_act1_silence_overlay.png"
+            download="kutch_act1_silence_overlay.png"
+            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/15 bg-white/[0.04] hover:bg-white/[0.12] text-[9.5px] font-mono tracking-wider uppercase text-white/80 hover:text-white transition-all"
+            title="Download High-Res Transparent Web Map Overlay"
+          >
+            <span>⤓ PNG Overlay</span>
+          </a>
           {onBackToAct1 && (
             <button
               onClick={() => {
@@ -398,6 +433,19 @@ export default function NisarShowcaseView({ onBackToAct1, onReturnToOrbit }) {
 
             {/* Top-Right Canvas Quick Overlay Controls */}
             <div className="absolute top-3 right-3 flex items-center gap-1.5 z-20">
+              <button
+                onClick={() => {
+                  soundEngine.playClick();
+                  setShowRaster(!showRaster);
+                }}
+                className={`px-2 py-0.5 rounded text-[8px] font-mono tracking-wider border cursor-pointer ${
+                  showRaster
+                    ? 'bg-cyan-950/80 border-cyan-500/50 text-cyan-300'
+                    : 'bg-black/60 border-white/10 text-white/40'
+                }`}
+              >
+                GRANULE {showRaster ? 'ON' : 'OFF'}
+              </button>
               <button
                 onClick={() => {
                   soundEngine.playClick();
