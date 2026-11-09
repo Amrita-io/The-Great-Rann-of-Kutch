@@ -1,138 +1,142 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { soundEngine } from '../utils/audio';
 
-// 5 Key Geographic & Cultural Hotspots on the Kutch Diorama Island
-// Enhanced with Regional Topographic Highlight Footprints & CAD Focus Bounds
+// 5 Key Sequential Acts of the Kutch Narrative (Left to Right across the Diorama)
 const TERRAIN_ZONES = [
   {
-    id: 'lagoon',
+    id: 'act1_white_desert',
     index: '01',
-    code: 'AQUATIC // BIO-RESERVE',
-    title: 'Flamingo Lagoon Inlets',
-    tagline: 'SHALLOW BRACKISH CHANNELS & MIGRATORY HAVEN',
-    desc: 'Western coastal depression sculpted by seasonal tidal sea waters. A vital hypersaline wetland harboring over 50,000 Lesser and Greater Flamingos feeding on carotenoid-rich Artemia brine shrimp.',
-    nodePos: { x: 33, y: 46 }, // % coordinate on 2:1 transparent island
-    regionCode: 'AQUATIC-ESTUARY',
-    region: { cx: 33, cy: 46, rx: 11, ry: 17, rotate: -15 },
-    bounds: { x: 23, y: 27, w: 20, h: 38 },
-    theme: {
-      accent: '#38bdf8', // vivid sky cyan
-      glow: 'rgba(56, 189, 248, 0.55)',
-      glowSubtle: 'rgba(14, 165, 233, 0.22)',
-      border: 'rgba(56, 189, 248, 0.75)',
-      boxBg: 'rgba(56, 189, 248, 0.05)'
-    },
-    metrics: [
-      { label: 'SALINITY', val: '45-120 PPT' },
-      { label: 'SPECIES', val: 'PHOENICOPTERUS' },
-      { label: 'DEPTH', val: '0.2M - 1.2M' },
-      { label: 'STATUS', val: 'PROTECTED BIOME' }
-    ]
-  },
-  {
-    id: 'saltflat',
-    index: '02',
-    code: 'HALITE // CORE DEPOSIT',
-    title: 'The Great Salt Flat',
-    tagline: 'PURE CRYSTALLINE HALITE GEOMETRY',
-    desc: 'The central hyper-arid plateau of hardened sodium chloride crust, formed by intense solar evaporation of an ancient arm of the Arabian Sea. Extends into an infinite celestial white horizon under starlight.',
-    nodePos: { x: 50, y: 41 },
+    actRoman: 'ACT I',
+    code: 'ACT I // HALITE GEOLOGY',
+    title: 'The Infinite White Desert',
+    tagline: 'PRISTINE CRYSTALLINE HALITE STRATUM',
+    desc: 'The westernmost tectonic plate of ancient seabed surrendered to the sun. An endless expanse of pure crystalline halite crust extending 7,500 square kilometers, forming an otherworldly white horizon under starlight.',
+    nodePos: { x: 22.5, y: 48.0 }, // % coordinate on 1024x572 diorama
     regionCode: 'HALITE-CRUST',
-    region: { cx: 50, cy: 41, rx: 13, ry: 15, rotate: 0 },
-    bounds: { x: 38, y: 25, w: 24, h: 32 },
+    region: { cx: 22.5, cy: 48.0, rx: 7.5, ry: 13, rotate: 0 },
+    bounds: { x: 15.5, y: 34, w: 13.5, h: 28 },
     theme: {
-      accent: '#ffffff', // crystalline white
-      glow: 'rgba(255, 255, 255, 0.65)',
-      glowSubtle: 'rgba(255, 255, 255, 0.25)',
+      accent: '#ffffff', // crystalline halite white
+      glow: 'rgba(255, 255, 255, 0.75)',
+      glowSubtle: 'rgba(255, 255, 255, 0.28)',
       border: 'rgba(255, 255, 255, 0.85)',
       boxBg: 'rgba(255, 255, 255, 0.06)'
     },
     metrics: [
-      { label: 'TOTAL AREA', val: '7,505 KM²' },
-      { label: 'ALBEDO', val: '0.84 HIGH' },
-      { label: 'THICKNESS', val: '0.15M - 0.40M' },
-      { label: 'MINERAL', val: '98% NACL' }
+      { label: 'STRATUM', val: 'EVAPORITE BASIN' },
+      { label: 'PURITY', val: '98.4% NACL' },
+      { label: 'ALBEDO', val: '0.86 SOLAR' },
+      { label: 'CRUST DEPTH', val: '0.2M - 0.4M' }
     ]
   },
   {
-    id: 'bhunga',
+    id: 'act2_tidal_inlets',
+    index: '02',
+    actRoman: 'ACT II',
+    code: 'ACT II // TIDAL HYDROLOGY',
+    title: 'Ancient Tidal Inlets',
+    tagline: 'BRACKISH CHANNELS & SECLUDED ISLETS',
+    desc: 'Deep azure waters carve through sunken rock canyons, cradling isolated golden islets. During seasonal monsoons, ocean tides surge into these channels, creating a hypersaline marine sanctuary teeming with carotenoid-rich Artemia brine shrimp.',
+    nodePos: { x: 35.0, y: 45.5 },
+    regionCode: 'TIDAL-CHANNELS',
+    region: { cx: 35.0, cy: 45.5, rx: 7.5, ry: 14, rotate: 0 },
+    bounds: { x: 28.5, y: 32, w: 13.0, h: 30 },
+    theme: {
+      accent: '#38bdf8', // tidal cyan/azure
+      glow: 'rgba(56, 189, 248, 0.65)',
+      glowSubtle: 'rgba(14, 165, 233, 0.25)',
+      border: 'rgba(56, 189, 248, 0.85)',
+      boxBg: 'rgba(56, 189, 248, 0.06)'
+    },
+    metrics: [
+      { label: 'WATER TYPE', val: 'HYPERSALINE' },
+      { label: 'SALINITY', val: '45 - 110 PPT' },
+      { label: 'ISLETS', val: '3 ROCK REFUGES' },
+      { label: 'TIDAL SURGE', val: '+1.8M MONSOON' }
+    ]
+  },
+  {
+    id: 'act3_crystallization',
     index: '03',
-    code: 'HABITAT // VERNACULAR',
-    title: 'Rabari Bhunga Plateau',
-    tagline: 'EARTHQUAKE-RESISTANT CYLINDRICAL DWELLINGS',
-    desc: 'Elevated north-eastern rock terrace hosting ancestral circular mud Bhungas with conical thatched roofs. The thick clay walls insulate against 50°C summer heat, adorned with intricate Lippan mirror relief art.',
-    nodePos: { x: 69, y: 25 },
-    regionCode: 'BHUNGA-SETTLEMENT',
-    region: { cx: 69, cy: 25, rx: 9, ry: 12, rotate: 15 },
-    bounds: { x: 60, y: 13, w: 18, h: 25 },
+    actRoman: 'ACT III',
+    code: 'ACT III // MINERAL EXTRACTION',
+    title: 'Halite Crystallization',
+    tagline: 'TECTONIC FISSURES & ARTISANAL SALT BEDS',
+    desc: 'The central transition zone where cracked salt mudflats meet shallow evaporation pans. Indigenous Agariya salt farmers pump underground brine into clay pans, hand-raking salt crystals under the intense 45°C desert sun.',
+    nodePos: { x: 46.5, y: 46.5 },
+    regionCode: 'SALT-CRUSTING',
+    region: { cx: 46.5, cy: 46.5, rx: 6.5, ry: 14, rotate: 0 },
+    bounds: { x: 41.0, y: 32, w: 11.5, h: 30 },
     theme: {
-      accent: '#fbbf24', // terracotta amber
-      glow: 'rgba(251, 191, 36, 0.55)',
-      glowSubtle: 'rgba(245, 158, 11, 0.22)',
-      border: 'rgba(251, 191, 36, 0.75)',
-      boxBg: 'rgba(251, 191, 36, 0.05)'
+      accent: '#2dd4bf', // brine aquamarine
+      glow: 'rgba(45, 212, 191, 0.65)',
+      glowSubtle: 'rgba(20, 184, 166, 0.25)',
+      border: 'rgba(45, 212, 191, 0.85)',
+      boxBg: 'rgba(45, 212, 191, 0.06)'
     },
     metrics: [
-      { label: 'STRUCTURE', val: 'CIRCULAR CLAY' },
-      { label: 'CRAFT', val: 'LIPPAN MIRROR' },
-      { label: 'GUILD', val: 'RABARI / MEGHWAL' },
-      { label: 'SEISMIC', val: 'HIGH RESILIENCE' }
+      { label: 'PROCESS', val: 'SOLAR BRINING' },
+      { label: 'COMMUNITY', val: 'AGARIYA GUILDS' },
+      { label: 'HARVEST', val: '8-MONTH CYCLE' },
+      { label: 'OUTPUT', val: '75% INLAND SALT' }
     ]
   },
   {
-    id: 'saltbeds',
+    id: 'act4_living_oasis',
     index: '04',
-    code: 'SOLAR // CRYSTALLIZATION',
-    title: 'Agariya Solar Salt Pans',
-    tagline: 'ARTISANAL GEOMETRIC BRINE BEDS',
-    desc: 'South-eastern matrix of shallow rectangular evaporation pans bounded by raised clay dykes. Indigenous Agariya salt farmers pump underground supersaturated brine, hand-raking salt crystals under the sun.',
-    nodePos: { x: 65, y: 60 },
-    regionCode: 'SOLAR-EVAPORATION',
-    region: { cx: 65, cy: 60, rx: 9, ry: 12, rotate: -8 },
-    bounds: { x: 56, y: 48, w: 18, h: 24 },
+    actRoman: 'ACT IV',
+    code: 'ACT IV // LIVING BIOSPHERE',
+    title: 'Living Oasis & Nomadic Craft',
+    tagline: 'WILDLIFE SANCTUARY & ANCESTRAL CRAFT',
+    desc: 'Where arid desert sands blossom into life. Over 50,000 Greater and Lesser Flamingos gather along wetland shores alongside the endangered Indian Wild Ass (Khur). Above the dunes, traditional Rabari patchwork quilts and mirror-work hang in the desert breeze.',
+    nodePos: { x: 63.0, y: 47.0 },
+    regionCode: 'NOMADIC-BIOSPHERE',
+    region: { cx: 63.0, cy: 47.0, rx: 11.5, ry: 18, rotate: 0 },
+    bounds: { x: 51.5, y: 26, w: 22.5, h: 37 },
     theme: {
-      accent: '#2dd4bf', // brine teal
-      glow: 'rgba(45, 212, 191, 0.55)',
-      glowSubtle: 'rgba(20, 184, 166, 0.22)',
-      border: 'rgba(45, 212, 191, 0.75)',
-      boxBg: 'rgba(45, 212, 191, 0.05)'
+      accent: '#f59e0b', // desert gold & terracotta
+      glow: 'rgba(245, 158, 11, 0.65)',
+      glowSubtle: 'rgba(217, 119, 6, 0.25)',
+      border: 'rgba(245, 158, 11, 0.85)',
+      boxBg: 'rgba(245, 158, 11, 0.06)'
     },
     metrics: [
-      { label: 'PROCESS', val: 'SOLAR CRUSTING' },
-      { label: 'FARMERS', val: 'AGARIYA GUILDS' },
-      { label: 'OUTPUT', val: 'INLAND SALT 75%' },
-      { label: 'CYCLE', val: '8 MONTH HARVEST' }
+      { label: 'FAUNA', val: 'INDIAN WILD ASS' },
+      { label: 'AVIFAUNA', val: '50K+ FLAMINGOS' },
+      { label: 'HERITAGE', val: 'RABARI NEEDLEWORK' },
+      { label: 'STATUS', val: 'UNESCO BIOSPHERE' }
     ]
   },
   {
-    id: 'caravan',
+    id: 'act5_renewable_horizon',
     index: '05',
-    code: 'CORRIDOR // ANCIENT ROUTE',
-    title: 'Southern Camel Caravans',
-    tagline: 'HISTORICAL NOMADIC PASSAGE',
-    desc: 'Compacted arid silt and thorn-scrub ridges navigated by Dromedary camel caravans, historically carrying rock salt, natural block-printed textiles, and spices across the Rann borderlands.',
-    nodePos: { x: 45, y: 57 },
-    regionCode: 'NOMADIC-CORRIDOR',
-    region: { cx: 45, cy: 57, rx: 11, ry: 9, rotate: -5 },
-    bounds: { x: 35, y: 48, w: 20, h: 19 },
+    actRoman: 'ACT V',
+    code: 'ACT V // FUTURE ENERGY',
+    title: 'The Renewable Horizon',
+    tagline: 'KHAVDA HYBRID ENERGY MATRIX',
+    desc: 'The eastern technological frontier: a futuristic geometric matrix of photovoltaic arrays and wind turbines. Generating 30 gigawatts of clean green energy across 726 square kilometers of salt wasteland, powering millions of homes across India.',
+    nodePos: { x: 79.0, y: 47.0 },
+    regionCode: 'SOLAR-MATRIX',
+    region: { cx: 79.0, cy: 47.0, rx: 7.0, ry: 13, rotate: 0 },
+    bounds: { x: 73.0, y: 33, w: 12.5, h: 28 },
     theme: {
-      accent: '#f59e0b', // desert gold
-      glow: 'rgba(245, 158, 11, 0.55)',
-      glowSubtle: 'rgba(217, 119, 6, 0.22)',
-      border: 'rgba(245, 158, 11, 0.75)',
-      boxBg: 'rgba(245, 158, 11, 0.05)'
+      accent: '#a5b4fc', // radiant energy cyber indigo
+      glow: 'rgba(165, 180, 252, 0.70)',
+      glowSubtle: 'rgba(129, 140, 248, 0.25)',
+      border: 'rgba(165, 180, 252, 0.85)',
+      boxBg: 'rgba(165, 180, 252, 0.06)'
     },
     metrics: [
-      { label: 'TRANSIT', val: 'CAMELUS DROMEDARIUS' },
-      { label: 'TERRAIN', val: 'ARID SILT / SCRUB' },
-      { label: 'ROUTE', val: 'DHORDO-KAVDA' },
-      { label: 'CLIMATE', val: 'DESERT TUNDRA' }
+      { label: 'CAPACITY', val: '30 GW HYBRID' },
+      { label: 'SURFACE', val: '726 SQ KM' },
+      { label: 'TECHNOLOGY', val: 'BIFACIAL PV + WIND' },
+      { label: 'GLOBAL RANK', val: 'WORLD #1 PARK' }
     ]
   }
 ];
 
 export default function KutchInteractiveMap({ onReturnToOrbit }) {
-  const [selectedIndex, setSelectedIndex] = useState(1); // Default to Salt Flat
+  const [selectedIndex, setSelectedIndex] = useState(0); // Default to Act I (White Desert)
   const [hasEnteredView, setHasEnteredView] = useState(false);
   const [mouseTilt, setMouseTilt] = useState({ x: 0, y: 0 });
   const [isHoveringIsland, setIsHoveringIsland] = useState(false);
@@ -165,7 +169,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
       observer.observe(sectionRef.current);
     }
 
-    // Custom event listener for instant activation from "Discover" click
+    // Custom event listener for instant activation from "Discover" click / video auto-scroll
     const handleTrigger = () => setHasEnteredView(true);
     window.addEventListener('kutch:trigger-map-reveal', handleTrigger);
 
@@ -175,7 +179,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
     };
   }, [hasEnteredView]);
 
-  // Keyboard navigation across regions (Arrow keys)
+  // Keyboard navigation across Acts (Arrow keys)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!hasEnteredView) return;
@@ -452,38 +456,38 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
       }`}>
         <div>
           <div className="flex items-center gap-2.5 mb-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-            <span className="text-[9.5px] font-mono tracking-[0.32em] uppercase text-white/55">
-              TOPOGRAPHIC SURVEY // 3D PROJECTION
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="text-[9.5px] font-mono tracking-[0.32em] uppercase text-white/60">
+              TOPOGRAPHIC SURVEY // 5-ACT CARTOGRAPHY
             </span>
           </div>
           <h1 className="font-['Cinzel',serif] text-xl sm:text-2xl md:text-3xl text-white font-normal tracking-[0.14em]">
             GREAT RANN OF KUTCH
           </h1>
-          <p className="text-[10px] font-mono tracking-[0.22em] text-white/45 uppercase mt-0.5">
-            ISLAND TOPOLOGY • HALITE BASIN & SALT MARSH INTERFACE
+          <p className="text-[10px] font-mono tracking-[0.22em] text-white/50 uppercase mt-0.5">
+            5 GEOLOGICAL ACTS • HALITE BASIN TO RENEWABLE MATRIX
           </p>
         </div>
 
         {/* Center Specification Capsule */}
-        <div className="hidden lg:flex items-center gap-3 px-4 py-1.5 rounded-full border border-white/15 bg-white/[0.03] text-[9.5px] font-mono tracking-[0.24em] text-white/70">
-          <span>MODEL: DIORAMA ISLAND</span>
-          <span className="w-1 h-1 rounded-full bg-white/40" />
+        <div className="hidden lg:flex items-center gap-3 px-4 py-1.5 rounded-full border border-white/15 bg-white/[0.03] text-[9.5px] font-mono tracking-[0.24em] text-white/75">
+          <span>MODEL: 5-ACT STRATA DIORAMA</span>
+          <span className="w-1 h-1 rounded-full bg-cyan-400" />
           <span>SCALE: 1:2500</span>
-          <span className="w-1 h-1 rounded-full bg-white/40" />
-          <span>VIEW: ORTHO 3D</span>
+          <span className="w-1 h-1 rounded-full bg-cyan-400" />
+          <span>VIEW: ISOMETRIC ORTHO</span>
         </div>
 
         {/* Right Telemetry Block */}
         <div className="text-right font-mono text-[9.5px] text-white/50 space-y-0.5">
           <div className="text-white/85 tracking-widest">COORDINATES: 23.83° N, 70.03° E</div>
           <div className="tracking-wider">SURVEY: WGS 84 • ALT: +1.5M</div>
-          <div className="text-white/35 text-[8.5px] tracking-wider uppercase">READY FOR HIGH-POLY MESH DROP-IN</div>
+          <div className="text-cyan-400/70 text-[8.5px] tracking-wider uppercase font-bold">READY FOR 3D MODEL MESH DROP-IN</div>
         </div>
       </header>
 
       {/* ========================================================
-          2. MAIN STAGE: FLOATING 3D ISLAND + CLEAN HUD INSPECTOR
+          2. MAIN STAGE: FLOATING 5-ACT DIORAMA + CLEAN HUD INSPECTOR
       ======================================================== */}
       <div
         ref={stageRef}
@@ -523,7 +527,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
               strokeLinejoin="round"
             />
 
-            {/* Origin Pip on Island Node */}
+            {/* Origin Pip on Active Act Hotspot */}
             <rect
               x={lineData.startX - 5}
               y={lineData.startY - 5}
@@ -568,14 +572,14 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
           </svg>
         )}
 
-        {/* Left Flank: Technical Index (SUTÈRA Inspired Index Column) */}
-        <div className={`hidden md:flex flex-col space-y-2 z-20 w-52 transition-all duration-700 delay-200 shrink-0 ${
+        {/* Left Flank: Technical Index (5 Acts Sequential List) */}
+        <div className={`hidden md:flex flex-col space-y-2 z-20 w-56 transition-all duration-700 delay-200 shrink-0 ${
           hasEnteredView ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'
         }`}>
           <div className="flex items-center gap-2 mb-1">
-            <span className="w-1.5 h-1.5 bg-white/60" />
+            <span className="w-1.5 h-1.5 bg-cyan-400" />
             <span className="font-mono text-[9px] uppercase tracking-[0.26em] text-white/50">
-              [TERRAIN ECO-ZONES]
+              [5 GEOLOGICAL ACTS]
             </span>
           </div>
 
@@ -594,10 +598,10 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
               >
                 <div className="flex items-center gap-2.5 truncate">
                   <span className={`font-mono text-[9px] font-bold ${isSelected ? 'text-white' : 'text-white/40'}`}>
-                    {zone.index}
+                    {zone.actRoman}
                   </span>
                   <span className="font-sans text-[11px] tracking-wide truncate">
-                    {zone.title}
+                    {zone.title.replace(/^Act [I|V|X]+: /, '')}
                   </span>
                 </div>
                 <span className={`font-mono text-[8px] tracking-widest ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'}`}>
@@ -608,7 +612,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
           })}
         </div>
 
-        {/* Center Canvas: Magnified Floating Transparent Island with Regional Highlighting */}
+        {/* Center Canvas: Floating 5-Acts Diorama Map with Regional Highlighting */}
         <div className="relative flex-1 w-full flex items-center justify-center min-h-[460px] sm:min-h-[560px] lg:min-h-[620px] px-2 sm:px-4">
           
           {/* Celestial Ambient Backlight Aura (Illuminates the Island Silhouettes & Relief) */}
@@ -619,7 +623,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
 
           {/* Interactive Floating Island Container with 3D Mouse Parallax */}
           <div
-            className="sx-island-viewport relative w-full max-w-[980px] xl:max-w-[1100px] 2xl:max-w-[1220px] aspect-[2/1] flex items-center justify-center"
+            className="sx-island-viewport relative w-full max-w-[1000px] xl:max-w-[1120px] 2xl:max-w-[1240px] aspect-[1024/572] flex items-center justify-center"
             style={{
               transform: `perspective(1400px) rotateX(${mouseTilt.y}deg) rotateY(${mouseTilt.x}deg)`
             }}
@@ -630,18 +634,18 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
               hasEnteredView ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-6'
             }`}>
               
-              {/* High-Resolution Transparent Island Diorama (Enhanced contrast, brightness, and drop shadows) */}
+              {/* High-Resolution 5-Acts Diorama Map */}
               {hasEnteredView && (
                 <img
-                  src="/assets/kutch_island_transparent.png"
-                  alt="Great Rann of Kutch Floating 3D Island Diorama"
-                  className="w-full h-full object-contain filter drop-shadow-[0_28px_56px_rgba(0,0,0,0.92)] drop-shadow-[0_0_35px_rgba(255,255,255,0.08)] contrast-[1.1] brightness-[1.08] pointer-events-none transition-all duration-500"
+                  src="/assets/kutch_5acts_diorama.webp"
+                  alt="Great Rann of Kutch 5-Acts Stratum Diorama"
+                  className="w-full h-full object-contain filter drop-shadow-[0_28px_56px_rgba(0,0,0,0.92)] drop-shadow-[0_0_35px_rgba(255,255,255,0.08)] contrast-[1.08] brightness-[1.06] pointer-events-none transition-all duration-500"
                   loading="lazy"
                 />
               )}
 
               {/* ========================================================
-                  ACTIVE REGION HIGHLIGHT LAYERS
+                  ACTIVE ACT REGION HIGHLIGHT LAYERS
                   (Luminous Biome Glow + CAD Architectural Bounding Box)
               ======================================================== */}
               {hasEnteredView && activeZone && (
@@ -686,7 +690,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                     {/* Sector Identification Capsule Header */}
                     <div className="absolute -top-4 left-2 px-1.5 py-0.5 rounded-[2px] bg-black/90 border border-white/20 font-mono text-[7px] tracking-wider uppercase text-white/90 flex items-center gap-1.5 shadow-md">
                       <span className="w-1.5 h-1.5 rounded-full animate-ping" style={{ backgroundColor: activeZone.theme.accent }} />
-                      <span className="font-bold">SEC-{activeZone.index}</span>
+                      <span className="font-bold">{activeZone.actRoman}</span>
                       <span className="text-white/40">//</span>
                       <span className="text-white/70">{activeZone.regionCode}</span>
                     </div>
@@ -705,7 +709,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                 </div>
               )}
 
-              {/* Interactive Target Reticles on the Island Surface */}
+              {/* Interactive Target Reticles for each Act on the Surface */}
               {hasEnteredView && TERRAIN_ZONES.map((zone, idx) => {
                 const isSelected = selectedIndex === idx;
                 return (
@@ -743,7 +747,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                           ? 'bg-white text-black font-bold border-white shadow-md'
                           : 'bg-black/85 text-white/70 border-white/15'
                       }`}>
-                        {zone.index} // {zone.title.split(' ')[0]}
+                        {zone.actRoman} // {zone.title.split(' ')[0]}
                       </span>
                     </div>
                   </div>
@@ -779,7 +783,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                 {activeZone.code}
               </span>
               <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-white border border-white/20">
-                /{activeZone.index}
+                {activeZone.actRoman}
               </span>
             </div>
 
@@ -806,20 +810,20 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
               ))}
             </div>
 
-            {/* Quick Navigation Buttons (Prev / Next) */}
+            {/* Quick Navigation Buttons (Prev / Next Act) */}
             <div className="flex items-center justify-between pt-2 border-t border-white/10 text-[9px] font-mono">
               <button
                 onClick={() => selectZone((selectedIndex - 1 + TERRAIN_ZONES.length) % TERRAIN_ZONES.length)}
                 className="text-white/50 hover:text-white transition-colors cursor-pointer py-1 px-2 rounded hover:bg-white/5"
               >
-                ← PREV REGION
+                ← PREV ACT
               </button>
               <span className="text-white/30">|</span>
               <button
                 onClick={() => selectZone((selectedIndex + 1) % TERRAIN_ZONES.length)}
                 className="text-white/50 hover:text-white transition-colors cursor-pointer py-1 px-2 rounded hover:bg-white/5"
               >
-                NEXT REGION →
+                NEXT ACT →
               </button>
             </div>
           </div>
@@ -828,17 +832,17 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
       </div>
 
       {/* ========================================================
-          3. BOTTOM CONTROLS & ZONE FILTER TABS
+          3. BOTTOM CONTROLS & ACT SELECTOR CHIPS
           (Generous pl-32 padding ensures ZERO overlap with fixed Sound Control)
       ======================================================== */}
       <footer className={`relative z-20 flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-white/10 transition-all duration-700 delay-400 pl-2 sm:pl-32 md:pl-36 ${
         hasEnteredView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}>
         
-        {/* Center/Left: Filter Chips */}
+        {/* Center/Left: Act Filter Chips */}
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/40 mr-1 hidden sm:inline">
-            ZONE SELECTOR:
+            SELECT ACT:
           </span>
           {TERRAIN_ZONES.map((zone, idx) => {
             const isSelected = selectedIndex === idx;
@@ -853,7 +857,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                     : 'bg-white/[0.05] border border-white/10 text-white/60 hover:text-white hover:border-white/30'
                 }`}
               >
-                {zone.index} // {zone.title.split(' ')[0]}
+                {zone.actRoman} // {zone.title.replace(/^Act [I|V|X]+: /, '').split(' ')[0]}
               </button>
             );
           })}

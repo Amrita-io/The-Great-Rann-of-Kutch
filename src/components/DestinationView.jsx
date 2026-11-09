@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { soundEngine } from '../utils/audio';
 import KutchInteractiveMap from './KutchInteractiveMap';
@@ -106,16 +106,46 @@ export default function DestinationView({
     });
   };
 
-  const handleDiscoverScroll = () => {
+  const hasAutoScrolled = useRef(false);
+  const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+
+  // Cinematic page-entry transition to the 5-Acts map
+  const executeCinematicTransition = useCallback(() => {
+    if (hasAutoScrolled.current) return;
+    hasAutoScrolled.current = true;
+
     soundEngine.playDiscoverSound();
+    setIsPageTransitioning(true);
+
     const mapEl = document.getElementById('sx-interactive-map');
-    if (!mapEl) return;
+    if (mapEl) {
+      // Trigger instant deferred load and entrance on 5-Acts diorama map
+      window.dispatchEvent(new CustomEvent('kutch:trigger-map-reveal'));
+      mapEl.scrollIntoView({ behavior: 'smooth' });
+    }
 
-    // Trigger instant deferred load and entrance on terrain map
-    window.dispatchEvent(new CustomEvent('kutch:trigger-map-reveal'));
+    setTimeout(() => {
+      setIsPageTransitioning(false);
+    }, 1400);
+  }, []);
 
-    // Cinematic smooth transition: glide into terrain blueprint
-    mapEl.scrollIntoView({ behavior: 'smooth' });
+  const handleDiscoverScroll = () => {
+    executeCinematicTransition();
+  };
+
+  // Auto-scroll when hero video is nearing completion
+  const handleVideoTimeUpdate = () => {
+    if (hasAutoScrolled.current || !videoRef.current) return;
+    const v = videoRef.current;
+    if (v.duration && v.currentTime >= v.duration - 0.9) {
+      executeCinematicTransition();
+    }
+  };
+
+  const handleVideoEnded = () => {
+    if (!hasAutoScrolled.current) {
+      executeCinematicTransition();
+    }
   };
 
   return (
@@ -356,7 +386,7 @@ export default function DestinationView({
       ======================================================== */}
       <section className="hero-container">
         
-        {/* Native Video: Plays Once & Holds Final Frame (No Repeat Plays!) */}
+        {/* Native Video: Plays Once & Holds Final Frame (Auto-scrolls when nearing end) */}
         <video
           ref={videoRef}
           src="/vid/WhatsApp%20Video%202026-11-09%20at%205.26.53%20PM.mp4"
@@ -364,8 +394,10 @@ export default function DestinationView({
           playsInline
           muted={soundEngine.isMuted}
           className="bg-video"
+          onTimeUpdate={handleVideoTimeUpdate}
           onEnded={(e) => {
             e.currentTarget.pause();
+            handleVideoEnded();
           }}
         >
           <source src="/vid/WhatsApp%20Video%202026-11-09%20at%205.26.53%20PM.mp4" type="video/mp4" />
@@ -450,6 +482,18 @@ export default function DestinationView({
         </div>
 
       </section>
+
+      {/* ========================================================
+          CINEMATIC TRANSITION OVERLAY ("Entered Another Page" Feel)
+      ======================================================== */}
+      {isPageTransitioning && (
+        <div className="fixed inset-0 z-50 pointer-events-none bg-black/75 backdrop-blur-[8px] flex flex-col items-center justify-center transition-all duration-700">
+          <div className="flex items-center gap-3 px-6 py-3 rounded-full border border-white/20 bg-black/90 text-[10.5px] font-mono tracking-[0.28em] uppercase text-white shadow-2xl animate-pulse">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+            <span>ENTERING THE 5 ACTS OF KUTCH // TOPOGRAPHIC CARTOGRAPHY</span>
+          </div>
+        </div>
+      )}
 
       {/* ========================================================
           FOLLOWING SECTION: INTERACTIVE 3D DIORAMA MAP & LEADER LINES
