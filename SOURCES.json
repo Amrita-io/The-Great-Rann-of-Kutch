@@ -1,0 +1,112 @@
+{
+  "sources": [
+    {
+      "source_id": "SRC_NISAR_ASF_GCOV",
+      "url": "https://nisar-docs.asf.alaska.edu/gcov",
+      "page_title": "NISAR Level-2 Geocoded Covariance (GCOV) Product Guide",
+      "publisher": "Alaska Satellite Facility (ASF) / NASA JPL",
+      "tier": "Tier 1",
+      "date_accessed": "2026-11-14",
+      "paraphrased_summary": "Defines GCOV format as gamma-naught power on a regular 20m UTM grid; specifies rtcGammaToSigmaFactor layer to convert gamma0 to sigma0 backscatter, and notes L-band NESZ noise floor requirement of approximately -23 dB."
+    },
+    {
+      "source_id": "SRC_NISAR_EOPORTAL",
+      "url": "https://www.eoportal.org/satellite-missions/nisar",
+      "page_title": "NASA-ISRO SAR Mission (NISAR) Overview",
+      "publisher": "ESA Earth Observation Portal (eoPortal)",
+      "tier": "Tier 1",
+      "date_accessed": "2026-11-14",
+      "paraphrased_summary": "Documents NISAR orbital altitude of 747 km in sun-synchronous dawn-dusk orbit, 12-day exact ground-track repeat cycle, 240+ km swath width, L-band (1.25 GHz, 24 cm wavelength) and S-band (3.2 GHz) radar instruments."
+    },
+    {
+      "source_id": "SRC_ALLAH_BUND_BILHAM",
+      "url": "https://cires1.colorado.edu/~bilham/AB2007",
+      "page_title": "The 1819 Rann of Kachchh Earthquake and the Allah Bund",
+      "publisher": "CIRES / University of Colorado Boulder (Prof. Roger Bilham)",
+      "tier": "Tier 1",
+      "date_accessed": "2026-11-14",
+      "paraphrased_summary": "Details 1819 intraplate thrust earthquake (magnitude Mw 7.7 to 8.2, nominal 7.8) producing an asymmetric surface fault scarp 50 to 90 km long with 2 to 6 m vertical uplift (up to 9 m local maximum), damming the Nara/Puran distributary of the Indus River."
+    },
+    {
+      "source_id": "SRC_ALLAH_BUND_SCIREP_2024",
+      "url": "https://doi.org/10.1038/s41598-024-62086-z",
+      "page_title": "Holocene surface-rupturing paleo-earthquakes along the Kachchh Mainland Fault: shaping the seismic landscape of Kachchh, Western India",
+      "publisher": "Scientific Reports (Nature Publishing Group)",
+      "tier": "Tier 1",
+      "date_accessed": "2026-11-14",
+      "paraphrased_summary": "Analyzes Holocene surface rupture records, intraplate fault geometry, and recurring tectonic uplift across the Kachchh basin, verifying the Allah Bund scarp as an exposed tectonic surface landform rather than a subterranean structure."
+    },
+    {
+      "source_id": "SRC_BHUNGA_NICEE_2012",
+      "url": "https://www.nicee.org/wcee-2012/3314.pdf",
+      "page_title": "Performance of Traditional Bhungas in 2001 Bhuj Earthquake",
+      "publisher": "National Information Centre of Earthquake Engineering (NICEE) / IIT Kanpur",
+      "tier": "Tier 1",
+      "date_accessed": "2026-11-14",
+      "paraphrased_summary": "Field assessment demonstrating traditional circular Kutchi Bhungas suffered 0% structural shear collapse during the Mw 7.6-7.7 2001 Bhuj earthquake due to circular geometry eliminating corner shear concentrations and distributing lateral ground motion into continuous perimeter hoop tension."
+    },
+    {
+      "source_id": "SRC_KUTCH_DESERT_SANCTUARY_FD",
+      "url": "https://forests.gujarat.gov.in/kutch-desert-wildlife-sanctuary",
+      "page_title": "Kutch Desert Wildlife Sanctuary & Flamingo City Profile",
+      "publisher": "Gujarat Forest Department",
+      "tier": "Tier 1",
+      "date_accessed": "2026-11-14",
+      "paraphrased_summary": "Describes the 7,505 sq km Kutch Desert Wildlife Sanctuary, seasonal inundation of shallow brine (0.5 to 1.5 m) surrounding Khadir Bet, creating a natural water barrier protecting the Flamingo City breeding colonies from terrestrial predators."
+    },
+    {
+      "source_id": "SRC_FLAMINGO_SALIM_ALI_1945",
+      "url": "https://www.bnhs.org/jbnhs/vol45-flamingo-city",
+      "page_title": "The Flamingo City in the Great Rann of Kutch",
+      "publisher": "Journal of the Bombay Natural History Society (Dr. Salim Ali)",
+      "tier": "Tier 1",
+      "date_accessed": "2026-11-14",
+      "paraphrased_summary": "Historic 1945 ornithological survey documenting an estimated colony of half a million Greater and Lesser Flamingos nesting on raised mud mounds in the Great Rann."
+    },
+    {
+      "source_id": "SRC_WILD_ASS_CENSUS_2024",
+      "url": "https://forests.gujarat.gov.in/wild-ass-sanctuary-census",
+      "page_title": "2020 & 2024 Population Estimation of Indian Wild Ass (Equus hemionus khur)",
+      "publisher": "Gujarat Forest Department",
+      "tier": "Tier 1",
+      "date_accessed": "2026-11-14",
+      "paraphrased_summary": "Official census counts reporting 6,082 individuals in 2020 and 7,672 individuals in 2024 across 15,510 sq km in the Little and Great Rann of Kutch; Schedule I under Wildlife Protection Act."
+    },
+    {
+      "source_id": "SRC_BANNI_ICAR_GUIDE",
+      "url": "https://krishi.icar.gov.in/banni-grassland-livestock",
+      "page_title": "Banni Grassland: Ecology, Pastoral Economy & Restoration",
+      "publisher": "ICAR / Gujarat Institute of Desert Ecology (GUIDE)",
+      "tier": "Tier 1",
+      "date_accessed": "2026-11-14",
+      "paraphrased_summary": "Documents Banni total area of approximately 2,618 sq km, livestock census of 48,982 buffalo and 10,681 cattle, invasive Prosopis juliflora spread from 6% in 1997 to 33% in 2009 and 54% in 2015, and dominant native sweet grass genera Dichanthium, Cenchrus, and Lasiurus."
+    },
+    {
+      "source_id": "SRC_HALITE_DIELECTRIC_GORHAM",
+      "url": "https://arxiv.org/abs/hep-ex/0108027",
+      "page_title": "Measurements of the Dielectric Properties of Rock Salt for Microwave Radiodetection",
+      "publisher": "Physical Review D / arXiv:hep-ex/0108027 (Gorham et al.)",
+      "tier": "Tier 1",
+      "date_accessed": "2026-11-14",
+      "paraphrased_summary": "Experimental measurements of halite dielectric properties: pure solid halite exhibits real permittivity eps' of 5.9 to 6.0 with low dielectric loss (tan delta < 1e-4), whereas natural evaporite rock salt exhibits higher loss due to moisture and clay inclusions."
+    },
+    {
+      "source_id": "SRC_MICROWAVE_RADAR_ULABY",
+      "url": "https://press.umich.edu/Books/M/Microwave-Radar-and-Radiometric-Remote-Sensing",
+      "page_title": "Microwave Radar and Radiometric Remote Sensing (Chapters 2, 8, 10)",
+      "publisher": "University of Michigan Press (Fawwaz T. Ulaby and David G. Long)",
+      "tier": "Tier 1",
+      "date_accessed": "2026-11-14",
+      "paraphrased_summary": "Derives physical formulas for Bragg resonance roughness spacing lambda/(2 sin theta), Fresnel specular reflectivity for horizontal polarization, and low-loss microwave penetration depth delta_p = (lambda * sqrt(eps')) / (2 * pi * eps'')."
+    },
+    {
+      "source_id": "SRC_L_BAND_BIOMASS_MITCHARD",
+      "url": "https://doi.org/10.1016/j.rse.2009.05.004",
+      "page_title": "Mapping woody biomass in African savannas using ALOS PALSAR L-band SAR",
+      "publisher": "Remote Sensing of Environment (Mitchard et al.)",
+      "tier": "Tier 1",
+      "date_accessed": "2026-11-14",
+      "paraphrased_summary": "Empirical study documenting L-band cross-polarized HV backscatter saturation behavior in tropical savannas, showing sensitive aboveground biomass retrieval up to 40-60 Mg/ha before saturation."
+    }
+  ]
+}

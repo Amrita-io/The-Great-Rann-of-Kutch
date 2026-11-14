@@ -21,7 +21,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { soundEngine } from '../utils/audio';
-import SOURCES_DATA from '../../SOURCES.json';
+import SOURCES_DATA from '../data/sources.json';
 
 import ExplodedStrataDiorama from './visualizers/ExplodedStrataDiorama';
 import VolumetricRadarCube from './visualizers/VolumetricRadarCube';
