@@ -94,7 +94,7 @@ export default function DestinationView({
         nextStep === 'monsoon-dance' ||
         nextStep === 'vegetation-nisar'
       ) {
-        soundEngine.playBreathOfTheRann(0.24);
+        soundEngine.playBreathOfTheRann(0.12);
       } else {
         // Any intro video or transition ('train-transit', 'monsoon-intro', 'vegetation-intro', 'sync-reflection')
         soundEngine.silenceAllBackgroundMusic();

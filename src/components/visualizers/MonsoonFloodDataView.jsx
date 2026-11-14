@@ -107,9 +107,9 @@ export default function MonsoonFloodDataView({
   const [showProvenanceModal, setShowProvenanceModal] = useState(false);
   const [isAudioMuted, setIsAudioMuted] = useState(soundEngine.isMuted);
 
-  // Play Breath of the Rann ambient soundtrack on data page
+  // Play Breath of the Rann ambient soundtrack quietly on data page
   useEffect(() => {
-    soundEngine.playBreathOfTheRann(0.24);
+    soundEngine.playBreathOfTheRann(0.12);
   }, []);
 
   useEffect(() => {

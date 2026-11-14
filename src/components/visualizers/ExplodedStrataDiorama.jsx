@@ -42,9 +42,9 @@ export default function ExplodedStrataDiorama({
   const [hoveredLayerIndex, setHoveredLayerIndex] = useState(null);
   const [isRotating3D, setIsRotating3D] = useState(false);
 
-  // Play Breath of the Rann ambient audio on mount and whenever in 3D stack
+  // Play Breath of the Rann ambient audio quietly on mount and whenever in 3D stack
   useEffect(() => {
-    soundEngine.playBreathOfTheRann(0.24);
+    soundEngine.playBreathOfTheRann(0.12);
   }, [activeInspectedLayer]);
 
   const mountRef = useRef(null);

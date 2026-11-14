@@ -66,7 +66,7 @@ export default function SoundControl() {
       if (soundEngine.mode === 'globe') {
         soundEngine.playOrbitMusic(0.25);
       } else if (soundEngine.mode === 'destination') {
-        soundEngine.playBreathOfTheRann(0.22);
+        soundEngine.playBreathOfTheRann(0.12);
       }
     }
   };

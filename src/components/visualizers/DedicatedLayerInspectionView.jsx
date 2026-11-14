@@ -39,9 +39,9 @@ export default function DedicatedLayerInspectionView({
   const [viewMode, setViewMode] = useState('radar'); // 'radar' | 'optical'
   const [selectedHotspotIdx, setSelectedHotspotIdx] = useState(0);
 
-  // Play Breath of the Rann ambient audio on mount
+  // Play Breath of the Rann ambient audio quietly on mount
   useEffect(() => {
-    soundEngine.playBreathOfTheRann(0.24);
+    soundEngine.playBreathOfTheRann(0.12);
   }, []);
 
   // Authentic Layer Educational Profiles (Direct from NISAR Data matrices)

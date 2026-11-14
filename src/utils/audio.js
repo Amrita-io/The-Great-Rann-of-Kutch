@@ -61,7 +61,7 @@ class SoundEngine {
 
         this.rannAudio = new Audio('/Sounds/Home/Breath_of_the_Rann.mp3');
         this.rannAudio.loop = true;
-        this.rannAudio.volume = 0.22; // gentle, delicate, non-distracting
+        this.rannAudio.volume = 0.12; // gentle, delicate, quiet ambient background atmosphere
         this.rannAudio.preload = 'auto';
 
         this.saltMirrorAudio = new Audio('/Sounds/Act-1/The_Vast_Salt_Mirror.mp3');
@@ -630,9 +630,9 @@ class SoundEngine {
 
   // ==========================================================
   // BREATH OF THE RANN (Soundtrack for 5 Acts Island Exploration)
-  // Gentle, authentic, non-distracting background atmosphere
+  // Gentle, authentic, quiet ambient background atmosphere
   // ==========================================================
-  playBreathOfTheRann(targetVol = 0.22) {
+  playBreathOfTheRann(targetVol = 0.12) {
     if (!this.rannAudio) return;
     try {
       this.rannAudio.muted = this.isMuted;
@@ -829,8 +829,8 @@ class SoundEngine {
     if (mode === 'nisar') {
       // 1. Cut off orbit music & Kutch acoustic music
       this.pauseOrbitMusic();
-      // 2. Play Breath of the Rann on data pages as instructed by user
-      this.playBreathOfTheRann(0.24);
+      // 2. Play Breath of the Rann quietly on data pages as instructed by user
+      this.playBreathOfTheRann(0.12);
       if (this.kutchGain) {
         this.kutchGain.gain.cancelScheduledValues(t);
         this.kutchGain.gain.linearRampToValueAtTime(0.00001, t + 0.3);

@@ -115,9 +115,9 @@ export default function KutchRealityDioramaView({ onSelectAct, onGoToHero, onRet
   const [hoveredAct, setHoveredAct] = useState(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Background atmosphere music verification
+  // Background atmosphere music verification (quiet)
   useEffect(() => {
-    soundEngine.playBreathOfTheRann(0.22);
+    soundEngine.playBreathOfTheRann(0.12);
   }, []);
 
   const activeActIndex = ACTS_DATA.findIndex((a) => a.id === activeActId);

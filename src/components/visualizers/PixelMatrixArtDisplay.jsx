@@ -22,218 +22,8 @@ const SUBJECTS = {
     paletteTag: 'GOLDEN THATCH, CLAY & LIPAN MIRROR MANDALAS',
     imageSrc: '/assets/bhunga_real_photo.jpg',
     draw: (ctx, w, h) => {
-      // Clear desert sky gradient (daylight sun as in authentic Kutch field photo)
-      const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.62);
-      skyGrad.addColorStop(0, '#38bdf8');
-      skyGrad.addColorStop(0.35, '#7dd3fc');
-      skyGrad.addColorStop(0.75, '#bae6fd');
-      skyGrad.addColorStop(1, '#fef3c7');
-      ctx.fillStyle = skyGrad;
-      ctx.fillRect(0, 0, w, h * 0.62);
-
-      // Distant pale desert horizon
-      ctx.fillStyle = '#fde68a';
-      ctx.fillRect(0, h * 0.60, w, h * 0.04);
-
-      // Sunlit earthen desert sand courtyard in foreground
-      const gndGrad = ctx.createLinearGradient(0, h * 0.62, 0, h);
-      gndGrad.addColorStop(0, '#fde68a');
-      gndGrad.addColorStop(0.35, '#f59e0b');
-      gndGrad.addColorStop(0.7, '#d97706');
-      gndGrad.addColorStop(1, '#b45309');
-      ctx.fillStyle = gndGrad;
-      ctx.fillRect(0, h * 0.62, w, h * 0.38);
-
-      const cx = w * 0.5;
-      const cyBase = h * 0.77;
-      const baseR = w * 0.38;
-
-      // Circular Foundation Plinth (White-painted base rim, as in photo)
-      ctx.fillStyle = '#f8fafc';
-      ctx.beginPath();
-      ctx.ellipse(cx, cyBase + 4, baseR + 4, 14, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#cbd5e1';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Cylindrical Rammed Mud Wall (Warm terracotta ochre clay)
-      const wallH = h * 0.23;
-      const wallTop = cyBase - wallH;
-      const wallGrad = ctx.createLinearGradient(cx - baseR, 0, cx + baseR, 0);
-      wallGrad.addColorStop(0, '#78350f');
-      wallGrad.addColorStop(0.2, '#9a3412');
-      wallGrad.addColorStop(0.5, '#b45309');
-      wallGrad.addColorStop(0.8, '#a16207');
-      wallGrad.addColorStop(1, '#78350f');
-      ctx.fillStyle = wallGrad;
-      ctx.fillRect(cx - baseR, wallTop, baseR * 2, wallH);
-
-      // Wall curved base & top
-      ctx.beginPath();
-      ctx.ellipse(cx, cyBase, baseR, 12, 0, 0, Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(cx, wallTop, baseR, 10, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Lower White Border Band running along the base of the wall
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(cx - baseR, cyBase - 8, baseR * 2, 8);
-      ctx.beginPath();
-      ctx.ellipse(cx, cyBase, baseR, 10, 0, 0, Math.PI);
-      ctx.fill();
-
-      // Conical Thatched Straw Roof (Chhatra) - High conical pitch
-      const apexY = wallTop - h * 0.36;
-      const roofOverhang = baseR * 1.15;
-      const roofGrad = ctx.createLinearGradient(cx - roofOverhang, 0, cx + roofOverhang, 0);
-      roofGrad.addColorStop(0, '#854d0e');
-      roofGrad.addColorStop(0.25, '#ca8a04');
-      roofGrad.addColorStop(0.5, '#eab308');
-      roofGrad.addColorStop(0.75, '#facc15');
-      roofGrad.addColorStop(1, '#713f12');
-      ctx.fillStyle = roofGrad;
-      ctx.beginPath();
-      ctx.moveTo(cx, apexY);
-      ctx.lineTo(cx + roofOverhang, wallTop + 6);
-      ctx.ellipse(cx, wallTop + 6, roofOverhang, 14, 0, 0, Math.PI);
-      ctx.lineTo(cx, apexY);
-      ctx.closePath();
-      ctx.fill();
-
-      // Overhanging thatched straw fringe (ragged natural fringe edge)
-      ctx.fillStyle = '#a16207';
-      for (let fx = cx - roofOverhang; fx <= cx + roofOverhang; fx += 6) {
-        ctx.beginPath();
-        ctx.moveTo(fx, wallTop + 4);
-        ctx.lineTo(fx + 3, wallTop + 11 + (Math.abs(fx % 5)));
-        ctx.lineTo(fx + 6, wallTop + 4);
-        ctx.fill();
-      }
-
-      // Fine Thatch Texture Fibers (Radial straw ribs)
-      ctx.strokeStyle = 'rgba(113, 63, 18, 0.45)';
-      ctx.lineWidth = 1.2;
-      for (let i = -14; i <= 14; i++) {
-        ctx.beginPath();
-        ctx.moveTo(cx, apexY);
-        ctx.lineTo(cx + (i / 14) * roofOverhang, wallTop + 6);
-        ctx.stroke();
-      }
-
-      // Horizontal thatch binding rings
-      ctx.strokeStyle = 'rgba(202, 138, 4, 0.5)';
-      ctx.lineWidth = 1;
-      for (let ring = 0.2; ring <= 0.85; ring += 0.15) {
-        const ry = apexY + ring * (wallTop - apexY);
-        const rx = ring * roofOverhang;
-        ctx.beginPath();
-        ctx.ellipse(cx, ry, rx, rx * 0.12, 0, 0, Math.PI);
-        ctx.stroke();
-      }
-
-      // Dark Apex Cap Finial (Top cap as seen in user photo)
-      ctx.fillStyle = '#1c1917';
-      ctx.beginPath();
-      ctx.roundRect(cx - 5, apexY - 6, 10, 8, [3, 3, 0, 0]);
-      ctx.fill();
-
-      // Front Centered Rectangular Doorway with Decorative Plaster Border
-      const doorW = baseR * 0.32;
-      const doorH = wallH * 0.78;
-      const doorX = cx - doorW / 2;
-      const doorY = cyBase - doorH;
-
-      // Decorative White Plaster Arch surround around doorway
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(doorX - 7, doorY - 6, doorW + 14, doorH + 6);
-
-      // Festive Chevron / Scallop Motifs on Doorframe (Red, Green, Blue)
-      const colors = ['#dc2626', '#16a34a', '#2563eb'];
-      for (let py = doorY; py < cyBase - 4; py += 7) {
-        ctx.fillStyle = colors[Math.floor(py / 7) % colors.length];
-        ctx.fillRect(doorX - 5.5, py, 3.5, 3.5);
-        ctx.fillRect(doorX + doorW + 2, py, 3.5, 3.5);
-      }
-
-      // Yellow Painted Wooden Doorframe
-      ctx.fillStyle = '#eab308';
-      ctx.fillRect(doorX - 2, doorY - 1, doorW + 4, doorH + 1);
-
-      // Deep Dark Interior
       ctx.fillStyle = '#09090b';
-      ctx.fillRect(doorX + 2, doorY + 3, doorW - 4, doorH - 3);
-
-      // Left Window with Yellow Shutter & White Decorative Frame
-      const winW = baseR * 0.22;
-      const winH = wallH * 0.44;
-      const winY = cyBase - wallH * 0.65;
-      const winLeftX = cx - baseR * 0.72;
-
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(winLeftX - 4, winY - 4, winW + 8, winH + 8);
-      ctx.fillStyle = '#eab308';
-      ctx.fillRect(winLeftX, winY, winW, winH);
-      ctx.fillStyle = '#09090b';
-      ctx.fillRect(winLeftX + 2, winY + 2, winW - 4, winH - 4);
-      // Window shutters open outward
-      ctx.fillStyle = '#facc15';
-      ctx.fillRect(winLeftX - 7, winY + 1, 6, winH - 2);
-
-      // Right Window with Yellow Shutter & White Decorative Frame
-      const winRightX = cx + baseR * 0.72 - winW;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(winRightX - 4, winY - 4, winW + 8, winH + 8);
-      ctx.fillStyle = '#eab308';
-      ctx.fillRect(winRightX, winY, winW, winH);
-      ctx.fillStyle = '#09090b';
-      ctx.fillRect(winRightX + 2, winY + 2, winW - 4, winH - 4);
-      // Window shutters open outward
-      ctx.fillStyle = '#facc15';
-      ctx.fillRect(winRightX + winW + 1, winY + 1, 6, winH - 2);
-
-      // Two Prominent Circular Lipan Mud-Mirror Flower Mandalas (As in user photo!)
-      // Helper to draw an 8-petal multi-colored flower medallion inside a white circle
-      const drawLipanMandala = (mx, my, radius) => {
-        // Outer clean white circle
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(mx, my, radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#e2e8f0';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // 8 radiating colorful petals (alternating blue, red, green, yellow)
-        const petalColors = ['#2563eb', '#dc2626', '#16a34a', '#eab308'];
-        for (let p = 0; p < 8; p++) {
-          const angle = (p / 8) * Math.PI * 2;
-          const px = mx + Math.cos(angle) * (radius * 0.58);
-          const py = my + Math.sin(angle) * (radius * 0.58);
-          ctx.fillStyle = petalColors[p % petalColors.length];
-          ctx.beginPath();
-          ctx.ellipse(px, py, radius * 0.42, radius * 0.18, angle, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Sparkling center mirror disc
-        ctx.fillStyle = '#f8fafc';
-        ctx.beginPath();
-        ctx.arc(mx, my, radius * 0.22, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#94a3b8';
-        ctx.lineWidth = 0.8;
-        ctx.stroke();
-      };
-
-      // Left Mandala between doorway and left window
-      const mandalaR = baseR * 0.14;
-      const mandalaY = cyBase - wallH * 0.42;
-      drawLipanMandala(cx - baseR * 0.35, mandalaY, mandalaR);
-
-      // Right Mandala between doorway and right window
-      drawLipanMandala(cx + baseR * 0.35, mandalaY, mandalaR);
+      ctx.fillRect(0, 0, w, h);
     }
   },
 
@@ -887,6 +677,19 @@ const SUBJECTS = {
 SUBJECTS.khur = SUBJECTS.wild_ass;
 SUBJECTS.fox = SUBJECTS.desert_fox;
 
+// Module-level preloaded cache to guarantee instant photo display
+const PRELOADED_IMAGES = {};
+if (typeof window !== 'undefined') {
+  Object.entries(SUBJECTS).forEach(([key, s]) => {
+    if (s.imageSrc) {
+      const img = new Image();
+      img.src = s.imageSrc;
+      PRELOADED_IMAGES[key] = img;
+      PRELOADED_IMAGES[s.id] = img;
+    }
+  });
+}
+
 export default function PixelMatrixArtDisplay({
   initialSubject = 'bhunga',
   showSubjectSelector = true,
@@ -904,20 +707,27 @@ export default function PixelMatrixArtDisplay({
   const ROWS = 80;
 
   // Preload and cache authentic high-resolution photographs
-  const [cachedImages, setCachedImages] = useState({});
+  const [cachedImages, setCachedImages] = useState(() => ({ ...PRELOADED_IMAGES }));
 
   useEffect(() => {
     Object.entries(SUBJECTS).forEach(([key, s]) => {
       if (s.imageSrc) {
-        const img = new Image();
-        img.src = s.imageSrc;
-        img.onload = () => {
-          setCachedImages((prev) => ({
-            ...prev,
-            [key]: img,
-            [s.id]: img
-          }));
-        };
+        const existing = PRELOADED_IMAGES[key];
+        if (existing && existing.complete && existing.naturalWidth > 0) {
+          setCachedImages((prev) => ({ ...prev, [key]: existing, [s.id]: existing }));
+        } else {
+          const img = existing || new Image();
+          if (!existing) img.src = s.imageSrc;
+          img.onload = () => {
+            PRELOADED_IMAGES[key] = img;
+            PRELOADED_IMAGES[s.id] = img;
+            setCachedImages((prev) => ({
+              ...prev,
+              [key]: img,
+              [s.id]: img
+            }));
+          };
+        }
       }
     });
   }, []);
@@ -933,7 +743,7 @@ export default function PixelMatrixArtDisplay({
     const subject = SUBJECTS[currentSubjectKey] || SUBJECTS.bhunga;
     offCtx.clearRect(0, 0, COLS, ROWS);
 
-    const loadedImg = cachedImages[currentSubjectKey] || (subject?.id && cachedImages[subject.id]);
+    const loadedImg = cachedImages[currentSubjectKey] || PRELOADED_IMAGES[currentSubjectKey] || (subject?.id && (cachedImages[subject.id] || PRELOADED_IMAGES[subject.id]));
     if (loadedImg && loadedImg.complete && loadedImg.naturalWidth > 0) {
       const imgW = loadedImg.naturalWidth;
       const imgH = loadedImg.naturalHeight;

@@ -38,332 +38,6 @@ const BANNI_ANNUAL_BIOMASS_DATA = [
   { month: 'OCT', primary: 28.5, secondary: 1.80, primaryDisplay: '28.5', secondaryDisplay: '1.8', phaseName: 'Peak Biomass', narrative: 'Peak annual biomass harvest; 50,000 cattle graze without fences.' }
 ];
 
-/**
- * 3D Interactive Bhunga Dot Matrix Component
- * Procedural point cloud representing a traditional circular Maldhari Bhunga hut.
- * Densely packed with over 6,800 tightly placed, glowing points occupying the whole space:
- * - Triple stepped concentric foundation plinth (Otta)
- * - Cylindrical rammed-mud wall (Kanthi) with authentic arched doorway & side jharokhas
- * - Inlaid sparkling Lipan mud-mirror diamond bands & starbursts
- * - Conical thatched roof (Chhatra) tapering up to a high apex (45° pitch)
- * - 16 radial timber rafters & crowning Kalash pinnacle
- * - Central supporting timber pillar (Thambha) visible within
- * - Smooth 360° interactive touch/mouse drag-to-rotate with idle rotation
- */
-function Bhunga3DModel() {
-  const containerRef = useRef(null);
-  const canvasRef = useRef(null);
-  const angleYRef = useRef(0.0); // Exactly front-faced facing arched doorway
-  const angleXRef = useRef(0.03); // Level eye-line elevation (not tilted forward)
-  const animRef = useRef(null);
-  const isDraggingRef = useRef(false);
-  const lastMouseRef = useRef({ x: 0, y: 0 });
-  const [dimensions, setDimensions] = useState({ width: 700, height: 560 });
-
-  // Dynamically observe container size to ensure 100% space occupation
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const updateSize = () => {
-      const rect = containerRef.current.getBoundingClientRect();
-      if (rect.width > 50 && rect.height > 50) {
-        setDimensions({
-          width: Math.round(rect.width),
-          height: Math.round(rect.height)
-        });
-      }
-    };
-    updateSize();
-    const ro = new ResizeObserver(updateSize);
-    ro.observe(containerRef.current);
-    return () => ro.disconnect();
-  }, []);
-
-  // Generate ultra-dense procedural points for the circular Bhunga (6,800+ points)
-  const points = useMemo(() => {
-    const pts = [];
-    const rCylinder = 160;
-    const wallHeight = 145;
-    const numWallRings = 42;
-    const dotsPerRing = 92;
-
-    // 1. Triple Stepped Concentric Foundation Plinth (Otta) - 340 points
-    for (let step = 0; step < 3; step++) {
-      const plinthR = rCylinder + 32 - step * 10;
-      const plinthY = -14 + step * 4.5;
-      const count = 110;
-      for (let i = 0; i < count; i++) {
-        const theta = (i / count) * Math.PI * 2;
-        pts.push({
-          x: plinthR * Math.cos(theta),
-          y: plinthY,
-          z: plinthR * Math.sin(theta),
-          type: 'base'
-        });
-      }
-    }
-
-    // 2. Rammed Earth Cylindrical Walls (Kanthi) with Arched Doorway & Jharokhas (~3,200 points)
-    for (let ring = 0; ring < numWallRings; ring++) {
-      const y = (ring / (numWallRings - 1)) * wallHeight;
-      for (let i = 0; i < dotsPerRing; i++) {
-        const theta = (i / dotsPerRing) * Math.PI * 2;
-
-        // Front Arched Doorway (theta around 0 rad, y < 100)
-        const isDoor = Math.abs(theta) < 0.22 && y < 100;
-        // Two Side Jharokha Ventilation Openings
-        const isWindow1 = Math.abs(theta - 1.57) < 0.16 && y > 52 && y < 92;
-        const isWindow2 = Math.abs(theta + 1.57) < 0.16 && y > 52 && y < 92;
-
-        if (isDoor || isWindow1 || isWindow2) continue;
-
-        // Sparkling Lipan Mud-Mirror Bands (diamond accents along rings 8, 16, 24, 32)
-        const isLipanBand = (ring === 8 || ring === 16 || ring === 24 || ring === 32) && i % 3 === 0;
-        const isLipanDiamond = (ring === 12 || ring === 20 || ring === 28) && (i % 6 === 0 || i % 6 === 2);
-
-        pts.push({
-          x: rCylinder * Math.cos(theta),
-          y,
-          z: rCylinder * Math.sin(theta),
-          type: (isLipanBand || isLipanDiamond) ? 'mirror' : 'wall'
-        });
-      }
-    }
-
-    // Timber Doorway Lintel & Doorposts
-    for (let dy = 0; dy <= 100; dy += 4.5) {
-      pts.push({ x: rCylinder * Math.cos(-0.22), y: dy, z: rCylinder * Math.sin(-0.22), type: 'post' });
-      pts.push({ x: rCylinder * Math.cos(0.22), y: dy, z: rCylinder * Math.sin(0.22), type: 'post' });
-    }
-    for (let dth = -0.22; dth <= 0.22; dth += 0.025) {
-      pts.push({ x: rCylinder * Math.cos(dth), y: 100, z: rCylinder * Math.sin(dth), type: 'post' });
-    }
-
-    // 3. Conical Thatched Roof (Chhatra) - Steep 45° Pitch (~2,700 points)
-    const roofBaseY = wallHeight;
-    const roofApexY = wallHeight + 195;
-    const numRoofTiers = 50;
-
-    for (let tier = 0; tier < numRoofTiers; tier++) {
-      const alpha = tier / (numRoofTiers - 1);
-      const y = roofBaseY + alpha * (roofApexY - roofBaseY);
-      const r = (1 - alpha) * (rCylinder + 16);
-      const count = Math.max(1, Math.round((r / rCylinder) * dotsPerRing));
-
-      for (let i = 0; i < count; i++) {
-        const theta = (i / count) * Math.PI * 2;
-        pts.push({
-          x: r * Math.cos(theta),
-          y,
-          z: r * Math.sin(theta),
-          type: 'roof'
-        });
-      }
-    }
-
-    // 4. Roof Timber Rafters (16 Radial Rafter Ribs from Apex to Eaves - 384 points)
-    for (let rIdx = 0; rIdx < 16; rIdx++) {
-      const theta = (rIdx / 16) * Math.PI * 2;
-      for (let step = 0; step < 24; step++) {
-        const alpha = step / 23;
-        const y = roofApexY - alpha * (roofApexY - roofBaseY);
-        const r = alpha * (rCylinder + 16);
-        pts.push({
-          x: r * Math.cos(theta),
-          y,
-          z: r * Math.sin(theta),
-          type: 'rafter'
-        });
-      }
-    }
-
-    // 5. Crown Timber Finial (Kalash Pinnacle at Apex)
-    for (let ky = roofApexY; ky <= roofApexY + 28; ky += 3) {
-      pts.push({ x: 0, y: ky, z: 0, type: 'kalash' });
-      pts.push({ x: 4 * Math.cos(ky), y: ky, z: 4 * Math.sin(ky), type: 'kalash' });
-    }
-
-    // 6. Central Timber Pillar (Thambha) Visible within
-    for (let y = 0; y < roofApexY; y += 4.5) {
-      pts.push({ x: 0, y, z: 0, type: 'post' });
-    }
-
-    return pts;
-  }, []);
-
-  // Pointer dragging to rotate 360°
-  const handlePointerDown = (e) => {
-    isDraggingRef.current = true;
-    lastMouseRef.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const handlePointerMove = (e) => {
-    if (!isDraggingRef.current) return;
-    const dx = e.clientX - lastMouseRef.current.x;
-    const dy = e.clientY - lastMouseRef.current.y;
-    lastMouseRef.current = { x: e.clientX, y: e.clientY };
-
-    angleYRef.current += dx * 0.006;
-    angleXRef.current = Math.max(-0.06, Math.min(0.24, angleXRef.current + dy * 0.0035));
-  };
-
-  const handlePointerUp = () => {
-    isDraggingRef.current = false;
-  };
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
-
-    // Set high-DPI display canvas
-    canvas.width = dimensions.width * dpr;
-    canvas.height = dimensions.height * dpr;
-    ctx.scale(dpr, dpr);
-
-    const render = () => {
-      if (!isDraggingRef.current) {
-        angleYRef.current += 0.0018; // Very subtle, gentle rotation keeping front perspective readable
-      }
-
-      const w = dimensions.width;
-      const h = dimensions.height;
-      const cx = w / 2;
-
-      // Calibrate FOV and camera distance so the entire hut (plinth to Kalash apex) fits cleanly in frame
-      const minDim = Math.min(w, h);
-      const fov = minDim * 0.78;
-      const cameraDistance = 470;
-      const baseScale = fov / cameraDistance;
-
-      // Midpoint of model is at y ≈ 165; center the model vertically with breathing room
-      const cy = (h / 2 - 10) + 165 * baseScale;
-
-      ctx.clearRect(0, 0, w, h);
-
-      // Radial Perspective Floor Grid under foundation plinth
-      ctx.strokeStyle = 'rgba(217, 119, 6, 0.12)';
-      ctx.lineWidth = 1;
-      for (let g = -220; g <= 220; g += 40) {
-        ctx.beginPath();
-        ctx.moveTo(cx + g * 0.85, cy + 10);
-        ctx.lineTo(cx + g * 1.45, cy + 85);
-        ctx.stroke();
-      }
-
-      const cosY = Math.cos(angleYRef.current);
-      const sinY = Math.sin(angleYRef.current);
-      const cosX = Math.cos(angleXRef.current);
-      const sinX = Math.sin(angleXRef.current);
-
-      // Transform & Project Points
-      const projected = points.map((p) => {
-        let px = p.x;
-        let py = p.y;
-        let pz = p.z;
-
-        // Y-axis rotation
-        const rx = px * cosY - pz * sinY;
-        const rz = px * sinY + pz * cosY;
-
-        // X-axis tilt
-        const ry = py * cosX - rz * sinX;
-        const rdepth = rz * cosX + py * sinX + cameraDistance;
-
-        const scale = fov / Math.max(10, rdepth);
-        const screenX = cx + rx * scale;
-        const screenY = cy - ry * scale;
-
-        return {
-          screenX,
-          screenY,
-          depth: rdepth,
-          scale,
-          type: p.type
-        };
-      });
-
-      // Sort back-to-front for proper depth occlusion
-      projected.sort((a, b) => b.depth - a.depth);
-
-      // Render glowing tightly packed dots
-      projected.forEach((dot) => {
-        const radius = Math.max(1.1, 2.2 * dot.scale);
-        ctx.beginPath();
-        ctx.arc(dot.screenX, dot.screenY, radius, 0, Math.PI * 2);
-
-        if (dot.type === 'mirror') {
-          ctx.fillStyle = '#ffffff';
-          ctx.shadowColor = '#ffffff';
-          ctx.shadowBlur = 8;
-        } else if (dot.type === 'kalash') {
-          ctx.fillStyle = '#fde68a';
-          ctx.shadowColor = '#f59e0b';
-          ctx.shadowBlur = 8;
-        } else if (dot.type === 'roof') {
-          ctx.fillStyle = '#f59e0b';
-          ctx.shadowColor = 'rgba(245, 158, 11, 0.5)';
-          ctx.shadowBlur = 2.5;
-        } else if (dot.type === 'rafter') {
-          ctx.fillStyle = '#d97706';
-          ctx.shadowColor = 'rgba(217, 119, 6, 0.3)';
-          ctx.shadowBlur = 1.5;
-        } else if (dot.type === 'post') {
-          ctx.fillStyle = '#78350f';
-          ctx.shadowBlur = 0;
-        } else if (dot.type === 'base') {
-          ctx.fillStyle = '#78716c';
-          ctx.shadowBlur = 0;
-        } else {
-          // Rammed earth cylindrical wall
-          ctx.fillStyle = '#b45309';
-          ctx.shadowColor = 'rgba(180, 83, 9, 0.4)';
-          ctx.shadowBlur = 2;
-        }
-        ctx.fill();
-      });
-
-      animRef.current = requestAnimationFrame(render);
-    };
-
-    animRef.current = requestAnimationFrame(render);
-    return () => cancelAnimationFrame(animRef.current);
-  }, [points, dimensions]);
-
-  return (
-    <div
-      ref={containerRef}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerUp}
-      className="relative w-full h-full min-h-[380px] sm:min-h-[460px] rounded-2xl bg-stone-950 border border-amber-900/40 overflow-hidden shadow-2xl flex items-center justify-center select-none cursor-grab active:cursor-grabbing touch-none"
-    >
-      <canvas
-        ref={canvasRef}
-        style={{ width: `${dimensions.width}px`, height: `${dimensions.height}px` }}
-        className="w-full h-full block"
-      />
-
-      {/* Top Overlay Badge */}
-      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/85 backdrop-blur-md border border-amber-500/40 text-[9.5px] font-mono text-amber-300 font-bold flex items-center gap-1.5 shadow-md">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-        <span>3D BHUNGA MATRIX &bull; 6,800+ DENSE POINTS &bull; 100% SCALE</span>
-      </div>
-
-      {/* Doorway & Dimensions Label */}
-      <div className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full bg-black/70 border border-white/10 text-[9px] font-mono text-stone-300">
-        Ø 5.4m Base &bull; 4.9m Apex &bull; 45° Pitch
-      </div>
-
-      {/* Bottom Hint */}
-      <div className="absolute bottom-3 right-3 text-[9px] font-mono text-stone-400/90 bg-black/70 px-2.5 py-1 rounded-md border border-white/10">
-        DRAG TO ROTATE 360° &bull; HOOP TENSION CYLINDER
-      </div>
-    </div>
-  );
-}
-
 const FAUNA_PROFILES = [
   {
     id: 'flamingo',
@@ -440,7 +114,6 @@ export default function SavannaLivingSyncJourney({
   const [visitedStations, setVisitedStations] = useState(new Set([0]));
   const [canopyHeight, setCanopyHeight] = useState(2.5); // 0.2m, 0.8m, 1.6m, 2.5m
   const [activeFaunaIdx, setActiveFaunaIdx] = useState(0);
-  const [bhungaMode, setBhungaMode] = useState('matrix'); // 'matrix' | '3d'
   const [faunaViewMode, setFaunaViewMode] = useState('pixel'); // 'pixel' | 'radar'
 
   // Sync with parent station state if provided
@@ -451,9 +124,9 @@ export default function SavannaLivingSyncJourney({
     }
   }, [activeStationIdx]);
 
-  // Maintain ambient soundtrack in sync across data pages
+  // Maintain ambient soundtrack in sync quietly across data pages
   useEffect(() => {
-    soundEngine.playBreathOfTheRann(0.24);
+    soundEngine.playBreathOfTheRann(0.12);
   }, []);
 
   const handleSelectStation = (idx) => {
@@ -635,58 +308,25 @@ export default function SavannaLivingSyncJourney({
                   <span>TRADITIONAL BHUNGA &bull; MUD ARCHITECTURE</span>
                 </span>
 
-                {/* View Mode Toggle: Colorful LED Matrix vs 3D Turntable */}
-                <div className="flex items-center gap-1 p-0.5 rounded-lg bg-stone-100 border border-stone-200">
-                  <button
-                    onClick={() => {
-                      try { soundEngine.playClick(); } catch (e) { }
-                      setBhungaMode('matrix');
-                    }}
-                    className={`px-2 py-0.5 rounded-md text-[9.5px] font-mono font-bold transition-all cursor-pointer flex items-center gap-1 ${bhungaMode === 'matrix'
-                      ? 'bg-amber-600 text-white shadow-sm'
-                      : 'text-stone-600 hover:text-stone-900'
-                      }`}
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    <span>COLORFUL LED MATRIX</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      try { soundEngine.playClick(); } catch (e) { }
-                      setBhungaMode('3d');
-                    }}
-                    className={`px-2 py-0.5 rounded-md text-[9.5px] font-mono font-bold transition-all cursor-pointer flex items-center gap-1 ${bhungaMode === '3d'
-                      ? 'bg-amber-600 text-white shadow-sm'
-                      : 'text-stone-600 hover:text-stone-900'
-                      }`}
-                  >
-                    <Compass className="w-3 h-3" />
-                    <span>3D TURNTABLE</span>
-                  </button>
+                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100/80 border border-amber-300/60 text-[9.5px] font-mono text-amber-900 font-bold">
+                  <Sparkles className="w-3 h-3 text-amber-600 animate-pulse" />
+                  <span>AUTHENTIC PHOTO MATRIX</span>
                 </div>
               </div>
 
-              {/* Viewport: Renders either the Interactive Colorful LED Matrix or 3D Structural Point Model */}
+              {/* Viewport: Dedicated Authentic Mud Bhunga LED Phosphor Matrix */}
               <div className="relative flex-1 w-full min-h-[360px] sm:min-h-[440px] rounded-2xl overflow-hidden bg-stone-950 border border-amber-900/40 shadow-2xl flex items-center justify-center">
-                {bhungaMode === 'matrix' ? (
-                  <PixelMatrixArtDisplay
-                    initialSubject="bhunga"
-                    showSubjectSelector={false}
-                  />
-                ) : (
-                  <Bhunga3DModel />
-                )}
+                <PixelMatrixArtDisplay
+                  initialSubject="bhunga"
+                  showSubjectSelector={false}
+                />
               </div>
 
               {/* Interaction Guide */}
               <div className="px-3 py-1.5 rounded-xl bg-amber-50/90 border border-amber-200/80 flex items-center justify-between text-[10px] font-mono text-amber-900">
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
-                  <span>
-                    {bhungaMode === 'matrix'
-                      ? 'TOUCH OR HOVER TO TRIGGER MAGNETIC PARTICLE RIPPLE'
-                      : 'TOUCH OR DRAG TO ROTATE 360°'}
-                  </span>
+                  <span>TOUCH OR HOVER TO TRIGGER MAGNETIC PARTICLE RIPPLE</span>
                 </span>
                 <span className="text-stone-500 font-sans italic hidden sm:inline">
                   Continuous circular perimeter dissipates lateral seismic shear into perimeter hoop tension

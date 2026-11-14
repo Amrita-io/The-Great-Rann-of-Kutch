@@ -115,9 +115,9 @@ export default function WinterSubsurfaceDataView({
   const verticalTrackRef = useRef(null);
   const isDraggingTrackRef = useRef(false);
 
-  // Maintain continuous sync of Breath of the Rann
+  // Maintain continuous sync of Breath of the Rann quietly
   useEffect(() => {
-    soundEngine.playBreathOfTheRann(0.24);
+    soundEngine.playBreathOfTheRann(0.12);
   }, []);
 
   // Sync mute state

@@ -334,9 +334,9 @@ export default function SeasonalDanceTimelineView({
   const dragStartYRef = useRef(null);
   const dragStartRotRef = useRef(null);
 
-  // Maintain ambient soundtrack in sync across data pages
+  // Maintain ambient soundtrack in sync quietly across data pages
   useEffect(() => {
-    soundEngine.playBreathOfTheRann(0.24);
+    soundEngine.playBreathOfTheRann(0.12);
   }, []);
 
   useEffect(() => {
