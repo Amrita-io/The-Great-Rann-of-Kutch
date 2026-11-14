@@ -31,3 +31,45 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+pipeline/.temp/
+
+# Large Raw Datasets & Staging Media (stored locally, not for git/web deployment)
+NISAR Data/
+*.h5
+*.hdf5
+/vid/
+/Sounds/
+/src_backup_pre_verification/
+/pipeline/
+
+# Private Local Dossiers, Verification Ledgers & Space Apps Pitch Deck (Never Push)
+PROJECT_DOSSIER_AND_CONTENT_VERIFICATION.md
+NASA_SPACE_APPS_2026_7_SLIDE_DECK.md
+docs/
+CLAIM_LEDGER.csv
+DISCREPANCY_LOG.md
+VERIFICATION_REPORT.md
+VERIFICATION_TODO.md
+SOURCES.json
+dom_text_dump.json
+ref_*.png
+screen_area.png
+
+# Unused & Redundant Media Files (Archived / Duplicate Staging in public)
+public/Sounds/Archive/
+public/vid/monsoon ride.mp4
+public/vid/rain loop.mp4
+public/vid/o.mp4
+public/vid/loop.mp4
+public/vid/monsoon.mp4
+public/vid/kutch-scroll.mp4
+public/vid/gemini_generated_video_42779383-ezremove.mp4
+public/vid/gemini_generated_video_82a7343c.mp4
+public/vid/WhatsApp*
+public/vid/*.jpg
+public/frames/

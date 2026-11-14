@@ -1,0 +1,47 @@
+{
+  "october_pass": {
+    "metadata": {
+      "granuleId": "NISAR_L2_PR_GCOV_034_063_D_076_4005_DHDH_A_20261028T135735_20261028T135810_P05036_N_F_J_001",
+      "orbit": 6563,
+      "track": 63,
+      "frame": 76,
+      "processingDateTime": "2026-11-09T12:22:36",
+      "centerFrequency": 1293500000.0,
+      "rangeResolution": 29.9792458,
+      "passDirection": "Descending"
+    },
+    "hh_stats": {
+      "min_db": -38.31,
+      "max_db": 19.0,
+      "median_db": -14.73,
+      "mean_db": -15.44
+    },
+    "hv_stats": {
+      "min_db": -41.89,
+      "max_db": 11.34,
+      "median_db": -20.65,
+      "mean_db": -20.84
+    }
+  },
+  "july_pass": {
+    "metadata": {
+      "granuleId": "NISAR_L2_PR_GCOV_025_063_D_076_2005_DHDH_M_20260712T135737_20260712T135812_P05023_N_F_J_001",
+      "orbit": 5006,
+      "track": 63,
+      "frame": 76,
+      "processingDateTime": "2026-07-19T11:04:00",
+      "passDirection": "Descending"
+    },
+    "hh_stats": {
+      "min_db": -44.99,
+      "max_db": 16.94,
+      "median_db": -15.97,
+      "mean_db": -16.61
+    }
+  },
+  "repeat_pass_temporal_difference": {
+    "median_delta_db": 0.84,
+    "max_wetting_drop_db": -12.0,
+    "max_drying_recovery_db": 12.0
+  }
+}

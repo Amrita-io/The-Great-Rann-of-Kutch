@@ -1,0 +1,137 @@
+{
+  "mission": "NASA-ISRO Synthetic Aperture Radar (NISAR) & Multi-Temporal SAR Time-Series",
+  "challenge": "NASA Space Apps Challenge: Dancing with SARs",
+  "study_area": {
+    "name": "Great Rann of Kutch & Banni Savanna Basin",
+    "location": "Gujarat, India (23.68°N - 24.54°N, 69.45°E - 70.75°E)",
+    "swath_km": "160 km x 160 km",
+    "projection": "EPSG:32642 (UTM Zone 42N, WGS84)"
+  },
+  "seasons": [
+    {
+      "id": "monsoon",
+      "chapter": "01",
+      "title": "August Peak Monsoon: The Vanishing Inland Sea",
+      "date": "2024-08-22T13:58:10Z",
+      "month": "August",
+      "season_type": "Monsoon Inundation",
+      "sensor": "Sentinel-1 SAR / NISAR 24cm L-Band Simulation",
+      "polarization": "HH + HV",
+      "frequency_ghz": 1.2575,
+      "wavelength_cm": 24.0,
+      "resolution_m": 10.0,
+      "cloud_cover_pct": "100% Storm Cloud Cover (Optical Satellite Blinded)",
+      "ground_feature": "7,500 km² saltwater flood inundation across Kutch depression",
+      "key_physics": "Specular forward deflection on micro-smooth calm water (< 0.8 cm roughness) creates an unmistakable dark radar null (-22.40 dB). Liquid water has high dielectric constant (78.2 εr).",
+      "calibrated_layer_asset": "/assets/layers/nisar_square_monsoon_change.webp",
+      "primary_metric": {
+        "value": "7,500 km²",
+        "label": "Flooded Marsh Area",
+        "secondary_value": "-22.40 dB",
+        "secondary_label": "Specular Null Return"
+      },
+      "ground_truth_stations": [
+        {
+          "name": "Central Specular Basin",
+          "coords": "24.36°N, 70.16°E",
+          "elevation": "+1.2 m",
+          "backscatter_db": -22.40,
+          "dielectric_er": 78.2,
+          "observation": "Specular null from calm floodwater"
+        },
+        {
+          "name": "Khadir Bet Flamingo Nursery",
+          "coords": "24.06°N, 70.40°E",
+          "elevation": "+45.2 m",
+          "backscatter_db": -19.28,
+          "dielectric_er": 68.5,
+          "observation": "Elevated island horst safe from land predators"
+        }
+      ]
+    },
+    {
+      "id": "greenery",
+      "chapter": "02",
+      "title": "October Post-Monsoon: The Savanna That Blooms",
+      "date": "2024-10-28T13:57:35Z",
+      "month": "October",
+      "season_type": "Post-Monsoon Vegetation Bloom",
+      "sensor": "NASA-ISRO NISAR L2 GCOV (Frame 076, Track 063, Orbit 6563)",
+      "raw_granule_id": "NISAR_L2_PR_GCOV_034_063_D_076_4005_DHDH_A_20261028T135735_20261028T135810_P05036_N_F_J_001.h5",
+      "polarization": "Dual-Pol Quad Covariance (HHHH + HVHV)",
+      "frequency_ghz": 1.2575,
+      "wavelength_cm": 24.0,
+      "resolution_m": 10.0,
+      "cloud_cover_pct": "15% Scattered Cloud Cover",
+      "ground_feature": "2,500 km² Banni tropical savanna forage growth & Prosopis encroachment",
+      "key_physics": "HV cross-polarization volume scattering. Horizontally polarized radar waves bounce between randomly oriented grass stalks, rotating into the vertical channel. Backscatter magnitude directly scales with aboveground dry biomass.",
+      "calibrated_layer_asset": "/assets/layers/nisar_square_biomass_carbon.webp",
+      "primary_metric": {
+        "value": "28.5 Mg / ha",
+        "label": "Aboveground Savanna Biomass",
+        "secondary_value": "-16.20 dB",
+        "secondary_label": "HV Volume Scattering"
+      },
+      "ground_truth_stations": [
+        {
+          "name": "Banni Savanna Pastures",
+          "coords": "23.82°N, 69.80°E",
+          "elevation": "+4.5 m",
+          "backscatter_db": -16.20,
+          "dielectric_er": 24.5,
+          "observation": "Dry forage yield for 50,000+ Maldhari livestock"
+        },
+        {
+          "name": "Kalo Dungar Peak",
+          "coords": "23.88°N, 69.78°E",
+          "elevation": "+462 m",
+          "backscatter_db": -12.94,
+          "dielectric_er": 3.40,
+          "observation": "Highest elevation basalt ridge geodetic anchor"
+        }
+      ]
+    },
+    {
+      "id": "winter",
+      "chapter": "03",
+      "title": "January Winter Arid: The Ghost Ocean Beneath the Salt",
+      "date": "2025-01-16T13:58:00Z",
+      "month": "January",
+      "season_type": "Arid Halite Crust & Subterranean Brine",
+      "sensor": "NISAR 24cm L-Band InSAR & Radiometric Permittivity Inversion",
+      "polarization": "HH + Complex Phase Interferometry (InSAR)",
+      "frequency_ghz": 1.2575,
+      "wavelength_cm": 24.0,
+      "resolution_m": 10.0,
+      "cloud_cover_pct": "0% Bone-Dry Desert Skies",
+      "ground_feature": "Bone-dry halite salt polygon mirror, 38 cm subterranean brine table, and 1819 Allah Bund fault scarp",
+      "key_physics": "Dry halite salt crust is non-conductive with low permittivity (3.18 εr), acting transparently to 24cm microwaves. Waves penetrate unhindered down to the liquid brine aquifer (68.5 εr). Repeat-pass InSAR detects sub-millimeter crust deformation across the 90 km 1819 earthquake fault.",
+      "calibrated_layer_asset": "/assets/layers/nisar_subsurface_moisture.webp",
+      "primary_metric": {
+        "value": "38 cm Depth",
+        "label": "Subterranean Brine Ocean",
+        "secondary_value": "< 0.4 mm / yr",
+        "secondary_label": "Allah Bund Fault Strain"
+      },
+      "ground_truth_stations": [
+        {
+          "name": "Subterranean Brine Aquifer",
+          "coords": "24.18°N, 70.43°E",
+          "elevation": "+0.8 m",
+          "backscatter_db": -21.35,
+          "dielectric_er": 68.5,
+          "observation": "Liquid brine 38 cm underground guiding Agariya salt wells"
+        },
+        {
+          "name": "1819 Allah Bund Fault Scarp",
+          "coords": "24.54°N, 69.93°E",
+          "elevation": "+3.0 m Scarp",
+          "backscatter_db": -18.09,
+          "dielectric_er": 4.85,
+          "observation": "90 km seismotectonic wall tracked with InSAR deformation"
+        }
+      ]
+    }
+  ]
+}
+

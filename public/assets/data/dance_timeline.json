@@ -1,0 +1,102 @@
+{
+  "metadata": {
+    "title": "NASA-ISRO NISAR Seasonal Dance Timeline (Annual Astronomical Cycle)",
+    "studyArea": "Great Rann of Kutch Basin, Gujarat, India",
+    "bbox": {
+      "minLon": 69.45,
+      "minLat": 23.68,
+      "maxLon": 70.75,
+      "maxLat": 24.28,
+      "utmX": [
+        545882.8,
+        677625.6
+      ],
+      "utmY": [
+        2618871.2,
+        2686342.7
+      ]
+    },
+    "sensor": "NISAR 24cm L-Band (1.25 GHz)",
+    "productLevel": "L2 GCOV (Geocoded Covariance)",
+    "gridResolutionMeters": 80.0,
+    "specularWaterThresholdDb": -18.0
+  },
+  "stops": [
+    {
+      "id": "winter",
+      "stopLabel": "JAN 18 (WINTER)",
+      "pillLabel": "JAN · WINTER",
+      "date": "January 18, 2026",
+      "title": "JANUARY 18, 2026 • WINTER CRUST & GHOST OCEAN",
+      "granuleId": "NISAR_L2_PR_GCOV_018_063_D_076_4005_DHDH_A_20260118T135735_20260118T135810_P05036_N_F_J_001",
+      "track": 63,
+      "frame": 76,
+      "imagePath": "/assets/layers/act1_winter_dry.webp",
+      "metrics": {
+        "floodBasinKm2": 0.0,
+        "vegetationHvDb": -24.8,
+        "backscatterSigma0Db": -14.2,
+        "surfaceState": "Bone-Dry Halite Crust"
+      },
+      "physicsExplanation": "Dry halite salt crystals exhibit near-zero dielectric loss (ε\" < 0.005). 24cm microwaves pass directly through the 15cm dry surface crust, imaging the buried 1819 Allah Bund fault scarp and reflecting off the subterranean ancient brine sea at 38cm depth.",
+      "ecologicalSync": "Desert foxes, jackals, and wild ungulates traverse the firm, bone-dry salt crust. Migratory waterfowl concentrate in southern coastal wetlands until the monsoon returns."
+    },
+    {
+      "id": "july",
+      "stopLabel": "JUL 12 (INGRESS)",
+      "pillLabel": "JUL · INGRESS",
+      "date": "July 12, 2026",
+      "title": "JULY 12, 2026 • FIRST MONSOON TIDAL INGRESS",
+      "granuleId": "NISAR_L2_PR_GCOV_025_063_D_076_2005_DHDH_M_20260712T135737_20260712T135812_P05023_N_F_J_001",
+      "track": 63,
+      "frame": 76,
+      "imagePath": "/assets/layers/act2_ingress.webp",
+      "metrics": {
+        "floodBasinKm2": 4822.7,
+        "vegetationHvDb": -21.55,
+        "backscatterSigma0Db": -19.0,
+        "surfaceState": "High Brine Saturation"
+      },
+      "physicsExplanation": "Arabian Sea tidal surges and initial monsoon runoff enter through the western mudflats. Smooth specular water acts as a mirror, deflecting radar waves away into space (deep dark tones), contrasting against the rougher dry mud borders.",
+      "ecologicalSync": "Water begins wrapping around Khadir Island, starting the formation of the natural water moat that protects Flamingo City from desert foxes and jackals."
+    },
+    {
+      "id": "august",
+      "stopLabel": "AUG 29 (PEAK FLOOD)",
+      "pillLabel": "AUG · PEAK",
+      "date": "August 29, 2026",
+      "title": "AUGUST 29, 2026 • PEAK MONSOON INUNDATION SEA",
+      "granuleId": "NISAR_L2_PR_GCOV_029_063_D_076_2005_QPDH_A_20260829T135735_20260829T135809_P05023_N_F_J_001",
+      "track": 63,
+      "frame": 76,
+      "imagePath": "/assets/layers/act2_peak_flood.webp",
+      "metrics": {
+        "floodBasinKm2": 7500.0,
+        "vegetationHvDb": -20.85,
+        "backscatterSigma0Db": -18.09,
+        "surfaceState": "Peak Inundation Sea"
+      },
+      "physicsExplanation": "Over 7,500 km² of the basin floor is completely submerged under a contiguous saltwater sea. Calm open water produces an intense specular null (-18.09 dB average), completely penetrating dense monsoon storm clouds.",
+      "ecologicalSync": "Flamingo breeding reaches its zenith with 500,000+ chicks safely isolated on elevated mud mounds inside the deep moat."
+    },
+    {
+      "id": "october",
+      "stopLabel": "OCT 28 (SAVANNA)",
+      "pillLabel": "OCT · SAVANNA",
+      "date": "October 28, 2026",
+      "title": "OCTOBER 28, 2026 • SAVANNA BLOOM & DRY HALITE CRUST",
+      "granuleId": "NISAR_L2_PR_GCOV_034_063_D_076_4005_DHDH_A_20261028T135735_20261028T135810_P05036_N_F_J_001",
+      "track": 63,
+      "frame": 76,
+      "imagePath": "/assets/layers/act3_october_nisar.webp",
+      "metrics": {
+        "floodBasinKm2": 5097.3,
+        "vegetationHvDb": -22.1,
+        "backscatterSigma0Db": -20.03,
+        "surfaceState": "Drying Halite Crust"
+      },
+      "physicsExplanation": "Floodwaters evaporate under scorching post-monsoon heat, leaving millions of jagged hexagonal salt crystals. High cross-polarized HV backscatter (-22.10 dB) reveals dense sweet grasses blooming across the southern Banni savanna.",
+      "ecologicalSync": "Maldhari nomadic pastoralists guide 50,000+ Kankrej cattle onto rich Banni grassland pastures in an ancient seasonal waltz of human-nature harmony."
+    }
+  ]
+}

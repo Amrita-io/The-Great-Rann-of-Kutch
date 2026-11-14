@@ -5,8 +5,7 @@ class SoundEngine {
   constructor() {
     this.ctx = null;
     // Sound is ON by default
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('saans_audio_muted') : null;
-    this.isMuted = saved === 'true'; // false by default
+    this.isMuted = false;
 
     this.mode = 'globe'; // 'globe' | 'destination' | 'nisar'
     this.listeners = new Set();
@@ -32,33 +31,90 @@ class SoundEngine {
     this.nisarChirpIntervalId = null;
     this.nisarTelemetryIntervalId = null;
 
+    // Breath of the High Plateau (Atmospheric Soundtrack for Orbit View)
+    this.orbitAudio = null;
+    this.orbitFadeTimer = null;
     // Breath of the Rann (Authentic Atmospheric Soundtrack for 5 Acts Island)
     this.rannAudio = null;
+    // The Vast Salt Mirror (Light Background Music for Act-1 Radar Showcase)
+    this.saltMirrorAudio = null;
+    // Authentic Regional Desert Folk Soundtrack for Terminal Station Outro
+    this.outroAudio = null;
+
     if (typeof window !== 'undefined' && typeof Audio !== 'undefined') {
       try {
+        this.orbitAudio = new Audio('/Sounds/Orbit/Breath_of_the_High_Plateau.mp3');
+        this.orbitAudio.loop = true;
+        this.orbitAudio.volume = 0.25; // ambient, majestic, cosmic
+        this.orbitAudio.preload = 'auto';
+
+        // Auto fallback if path isn't reached
+        this.orbitAudio.addEventListener('error', () => {
+          if (this.orbitAudio && !this.orbitAudio.src.includes('/Sounds/Home/')) {
+            this.orbitAudio.src = '/Sounds/Home/Breath_of_the_High_Plateau.mp3';
+            this.orbitAudio.load();
+            if (this.mode === 'globe' && !this.isMuted) {
+              this.playOrbitMusic(0.25);
+            }
+          }
+        });
+
         this.rannAudio = new Audio('/Sounds/Home/Breath_of_the_Rann.mp3');
         this.rannAudio.loop = true;
         this.rannAudio.volume = 0.22; // gentle, delicate, non-distracting
         this.rannAudio.preload = 'auto';
+
+        this.saltMirrorAudio = new Audio('/Sounds/Act-1/The_Vast_Salt_Mirror.mp3');
+        this.saltMirrorAudio.loop = true;
+        this.saltMirrorAudio.volume = 0.20; // light, delicate, atmospheric
+        this.saltMirrorAudio.preload = 'auto';
+
+        this.outroAudio = new Audio('/Sounds/Home/Hero_Musicians_Live.mp3');
+        this.outroAudio.loop = true;
+        this.outroAudio.volume = 0.32;
+        this.outroAudio.preload = 'auto';
       } catch (e) {}
     }
 
     this.isInitialized = false;
 
-    // Browser autoplay unlock
+    // Fresh Load Autoplay & User Activation Setup
     if (typeof window !== 'undefined') {
-      const unlockAudio = () => {
+      const triggerInitialPlay = () => {
         this.init();
         if (this.ctx && this.ctx.state === 'suspended') {
           this.ctx.resume().catch(() => {});
         }
-        ['click', 'pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(evt => {
-          window.removeEventListener(evt, unlockAudio);
-        });
+        if (this.mode === 'globe' && !this.isMuted) {
+          this.playOrbitMusic(0.25);
+        }
       };
 
-      ['click', 'pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(evt => {
-        window.addEventListener(evt, unlockAudio, { passive: true, once: true });
+      // 1. Attempt immediate playback on instantiation
+      triggerInitialPlay();
+
+      // 2. Attempt on DOM ready and window load
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        triggerInitialPlay();
+      } else {
+        window.addEventListener('DOMContentLoaded', triggerInitialPlay, { once: true });
+        window.addEventListener('load', triggerInitialPlay, { once: true });
+      }
+
+      // 3. User activation listener (capture phase on genuine activation events)
+      const onUserActivation = () => {
+        triggerInitialPlay();
+        if (this.orbitAudio && !this.orbitAudio.paused) {
+          ['pointerdown', 'mousedown', 'touchstart', 'click', 'keydown'].forEach(evt => {
+            window.removeEventListener(evt, onUserActivation, true);
+            document.removeEventListener(evt, onUserActivation, true);
+          });
+        }
+      };
+
+      ['pointerdown', 'mousedown', 'touchstart', 'click', 'keydown'].forEach(evt => {
+        window.addEventListener(evt, onUserActivation, { capture: true, passive: true });
+        document.addEventListener(evt, onUserActivation, { capture: true, passive: true });
       });
     }
   }
@@ -74,6 +130,10 @@ class SoundEngine {
         cb(this.isMuted);
       } catch (e) {}
     });
+  }
+
+  notifySubscribers() {
+    this.notify();
   }
 
   init() {
@@ -478,6 +538,97 @@ class SoundEngine {
   }
 
   // ==========================================================
+  // BREATH OF THE HIGH PLATEAU (Soundtrack for Orbit View)
+  // Atmospheric, celestial, cosmic soundtrack - plays on fresh site open!
+  // ==========================================================
+  playOrbitMusic(targetVol = 0.25) {
+    if (!this.orbitAudio) return;
+    try {
+      if (this.isMuted) return;
+
+      if (this.orbitFadeTimer) {
+        clearInterval(this.orbitFadeTimer);
+        this.orbitFadeTimer = null;
+      }
+
+      // If already playing unmuted with volume, keep playing
+      if (!this.orbitAudio.paused && !this.orbitAudio.muted) {
+        this.orbitAudio.volume = targetVol;
+        return;
+      }
+
+      this.orbitAudio.muted = false;
+      this.orbitAudio.volume = targetVol;
+
+      // 1. Attempt unmuted playback directly
+      const p = this.orbitAudio.play();
+      if (p !== undefined) {
+        p.then(() => {
+          if (this.orbitAudio) {
+            this.orbitAudio.muted = false;
+            this.orbitAudio.volume = targetVol;
+          }
+        }).catch(() => {
+          // 2. If browser autoplay policy requires user gesture,
+          // listen to genuine user activation events to play unmuted immediately
+          const handleFirstActivation = () => {
+            if (!this.orbitAudio || this.isMuted || this.mode !== 'globe') return;
+            this.init();
+            if (this.ctx && this.ctx.state === 'suspended') {
+              this.ctx.resume().catch(() => {});
+            }
+            this.orbitAudio.muted = false;
+            this.orbitAudio.volume = targetVol;
+            const retryPlay = this.orbitAudio.play();
+            if (retryPlay !== undefined) {
+              retryPlay.then(() => {
+                ['pointerdown', 'mousedown', 'touchstart', 'click', 'keydown'].forEach(evt => {
+                  window.removeEventListener(evt, handleFirstActivation, true);
+                  document.removeEventListener(evt, handleFirstActivation, true);
+                });
+              }).catch(() => {});
+            }
+          };
+
+          ['pointerdown', 'mousedown', 'touchstart', 'click', 'keydown'].forEach(evt => {
+            window.addEventListener(evt, handleFirstActivation, { capture: true, passive: true });
+            document.addEventListener(evt, handleFirstActivation, { capture: true, passive: true });
+          });
+        });
+      }
+    } catch (e) {}
+  }
+
+  pauseOrbitMusic() {
+    if (!this.orbitAudio) return;
+    try {
+      if (this.orbitFadeTimer) {
+        clearInterval(this.orbitFadeTimer);
+        this.orbitFadeTimer = null;
+      }
+      let vol = this.orbitAudio.volume;
+      this.orbitFadeTimer = setInterval(() => {
+        if (!this.orbitAudio) {
+          clearInterval(this.orbitFadeTimer);
+          this.orbitFadeTimer = null;
+          return;
+        }
+        vol -= 0.04;
+        if (vol <= 0.01) {
+          this.orbitAudio.volume = 0;
+          this.orbitAudio.pause();
+          clearInterval(this.orbitFadeTimer);
+          this.orbitFadeTimer = null;
+        } else {
+          this.orbitAudio.volume = Math.max(0, vol);
+        }
+      }, 40);
+    } catch (e) {
+      if (this.orbitAudio) this.orbitAudio.pause();
+    }
+  }
+
+  // ==========================================================
   // BREATH OF THE RANN (Soundtrack for 5 Acts Island Exploration)
   // Gentle, authentic, non-distracting background atmosphere
   // ==========================================================
@@ -485,25 +636,16 @@ class SoundEngine {
     if (!this.rannAudio) return;
     try {
       this.rannAudio.muted = this.isMuted;
-      this.rannAudio.volume = 0.01;
+      // Continuous sync across 3D stack, layer inspection, and winter data showcase:
+      // If already playing, keep playing seamlessly without restarting or fading down!
+      if (!this.rannAudio.paused) {
+        this.rannAudio.volume = targetVol;
+        return;
+      }
+      this.rannAudio.volume = targetVol;
       const p = this.rannAudio.play();
       if (p !== undefined) {
-        p.then(() => {
-          let vol = 0.01;
-          const fadeTimer = setInterval(() => {
-            if (!this.rannAudio) {
-              clearInterval(fadeTimer);
-              return;
-            }
-            vol += 0.02;
-            if (vol >= targetVol) {
-              this.rannAudio.volume = targetVol;
-              clearInterval(fadeTimer);
-            } else {
-              this.rannAudio.volume = vol;
-            }
-          }, 80);
-        }).catch(() => {});
+        p.catch(() => {});
       }
     } catch (e) {}
   }
@@ -531,11 +673,131 @@ class SoundEngine {
     }
   }
 
+  // ==========================================================
+  // THE VAST SALT MIRROR (Light Background Music for Act-1 Radar Showcase)
+  // Delicate, spatial, atmospheric soundtrack
+  // ==========================================================
+  playSaltMirrorMusic(targetVol = 0.20) {
+    if (!this.saltMirrorAudio) return;
+    try {
+      this.saltMirrorAudio.muted = this.isMuted;
+      this.saltMirrorAudio.volume = 0.01;
+      const p = this.saltMirrorAudio.play();
+      if (p !== undefined) {
+        p.then(() => {
+          let vol = 0.01;
+          const fadeTimer = setInterval(() => {
+            if (!this.saltMirrorAudio) {
+              clearInterval(fadeTimer);
+              return;
+            }
+            vol += 0.02;
+            if (vol >= targetVol) {
+              this.saltMirrorAudio.volume = targetVol;
+              clearInterval(fadeTimer);
+            } else {
+              this.saltMirrorAudio.volume = vol;
+            }
+          }, 80);
+        }).catch(() => {});
+      }
+    } catch (e) {}
+  }
+
+  pauseSaltMirrorMusic() {
+    if (!this.saltMirrorAudio) return;
+    try {
+      let vol = this.saltMirrorAudio.volume;
+      const fadeOutTimer = setInterval(() => {
+        if (!this.saltMirrorAudio) {
+          clearInterval(fadeOutTimer);
+          return;
+        }
+        vol -= 0.03;
+        if (vol <= 0.01) {
+          this.saltMirrorAudio.volume = 0;
+          this.saltMirrorAudio.pause();
+          clearInterval(fadeOutTimer);
+        } else {
+          this.saltMirrorAudio.volume = Math.max(0, vol);
+        }
+      }, 40);
+    } catch (e) {
+      if (this.saltMirrorAudio) this.saltMirrorAudio.pause();
+    }
+  }
+
+  // ==========================================================
+  // REGIONAL OUTRO MUSIC (Hero Musicians Live - Kutch Folk)
+  // Plays at the terminal station arrival & celebration
+  // ==========================================================
+  playRegionalOutroMusic(targetVol = 0.35) {
+    if (!this.outroAudio) return;
+    try {
+      this.outroAudio.muted = this.isMuted;
+      this.outroAudio.volume = 0.01;
+      const p = this.outroAudio.play();
+      if (p !== undefined) {
+        p.then(() => {
+          let vol = 0.01;
+          const fadeTimer = setInterval(() => {
+            if (!this.outroAudio) {
+              clearInterval(fadeTimer);
+              return;
+            }
+            vol += 0.03;
+            if (vol >= targetVol) {
+              this.outroAudio.volume = targetVol;
+              clearInterval(fadeTimer);
+            } else {
+              this.outroAudio.volume = vol;
+            }
+          }, 80);
+        }).catch(() => {});
+      }
+    } catch (e) {}
+  }
+
+  pauseRegionalOutroMusic() {
+    if (!this.outroAudio) return;
+    try {
+      let vol = this.outroAudio.volume;
+      const fadeOutTimer = setInterval(() => {
+        if (!this.outroAudio) {
+          clearInterval(fadeOutTimer);
+          return;
+        }
+        vol -= 0.04;
+        if (vol <= 0.01) {
+          this.outroAudio.volume = 0;
+          this.outroAudio.pause();
+          clearInterval(fadeOutTimer);
+        } else {
+          this.outroAudio.volume = Math.max(0, vol);
+        }
+      }, 40);
+    } catch (e) {
+      if (this.outroAudio) this.outroAudio.pause();
+    }
+  }
+
   // Ensures ZERO background music or sounds play anywhere on the site when any video is playing
   silenceAllBackgroundMusic() {
+    if (this.orbitAudio) {
+      this.orbitAudio.pause();
+      this.orbitAudio.currentTime = 0;
+    }
     if (this.rannAudio) {
       this.rannAudio.pause();
       this.rannAudio.currentTime = 0;
+    }
+    if (this.saltMirrorAudio) {
+      this.saltMirrorAudio.pause();
+      this.saltMirrorAudio.currentTime = 0;
+    }
+    if (this.outroAudio) {
+      this.outroAudio.pause();
+      this.outroAudio.currentTime = 0;
     }
     if (this.ctx) {
       const t = this.ctx.currentTime;
@@ -559,30 +821,34 @@ class SoundEngine {
   // ==========================================================
   setMode(mode) {
     this.mode = mode;
+    this.notify();
     if (!this.ctx) return;
 
     const t = this.ctx.currentTime;
 
     if (mode === 'nisar') {
-      // 1. Cut off Kutch acoustic music & Breath of the Rann
-      this.pauseBreathOfTheRann();
+      // 1. Cut off orbit music & Kutch acoustic music
+      this.pauseOrbitMusic();
+      // 2. Play Breath of the Rann on data pages as instructed by user
+      this.playBreathOfTheRann(0.24);
       if (this.kutchGain) {
         this.kutchGain.gain.cancelScheduledValues(t);
         this.kutchGain.gain.linearRampToValueAtTime(0.00001, t + 0.3);
       }
-      // 2. Cut off orbit space drones
+      // 3. Cut off orbit space drones
       if (this.spaceGain) {
         this.spaceGain.gain.cancelScheduledValues(t);
         this.spaceGain.gain.linearRampToValueAtTime(0.00001, t + 0.3);
       }
-      // 3. Fade in authentic NISAR radar telemetry sound track
+      // 4. Fade in authentic NISAR radar telemetry sound track
       if (this.nisarGain) {
         this.nisarGain.gain.cancelScheduledValues(t);
         this.nisarGain.gain.linearRampToValueAtTime(0.26, t + 0.8);
       }
 
     } else if (mode === 'destination') {
-      // 1. Cut off space drones & NISAR telemetry
+      // 1. Cut off orbit music & space drones & NISAR telemetry
+      this.pauseOrbitMusic();
       if (this.spaceGain) {
         this.spaceGain.gain.cancelScheduledValues(t);
         this.spaceGain.gain.linearRampToValueAtTime(0.00001, t + 0.3);
@@ -597,6 +863,7 @@ class SoundEngine {
       // globe mode: return to orbit
       // 1. Cut off Kutch music & Breath of the Rann & NISAR telemetry
       this.pauseBreathOfTheRann();
+      this.pauseSaltMirrorMusic();
       if (this.kutchGain) {
         this.kutchGain.gain.cancelScheduledValues(t);
         this.kutchGain.gain.linearRampToValueAtTime(0.00001, t + 0.6);
@@ -606,11 +873,12 @@ class SoundEngine {
         this.nisarGain.gain.linearRampToValueAtTime(0.00001, t + 0.4);
       }
 
-      // 2. Restore space ambient for globe
+      // 2. Restore space ambient for globe & play Breath of the High Plateau
       if (this.spaceGain) {
         this.spaceGain.gain.cancelScheduledValues(t);
         this.spaceGain.gain.linearRampToValueAtTime(0.18, t + 1.2);
       }
+      this.playOrbitMusic(0.25);
     }
   }
 
@@ -626,8 +894,17 @@ class SoundEngine {
       localStorage.setItem('saans_audio_muted', this.isMuted ? 'true' : 'false');
     } catch (e) {}
 
+    if (this.orbitAudio) {
+      this.orbitAudio.muted = this.isMuted;
+    }
     if (this.rannAudio) {
       this.rannAudio.muted = this.isMuted;
+    }
+    if (this.saltMirrorAudio) {
+      this.saltMirrorAudio.muted = this.isMuted;
+    }
+    if (this.outroAudio) {
+      this.outroAudio.muted = this.isMuted;
     }
 
     if (this.masterGain && this.ctx) {
@@ -954,9 +1231,30 @@ class SoundEngine {
     } catch (e) {}
   }
 
-  // Mutes out orbit background music on dive into Kutch
+  // Smooth acoustic transition pulse (preserves active continuous soundtrack)
   playTransitionSound() {
-    this.silenceAllBackgroundMusic();
+    if (this.isMuted) return;
+    try {
+      this.init();
+      if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, t);
+      osc.frequency.exponentialRampToValueAtTime(880, t + 0.12);
+      gain.gain.setValueAtTime(0.04, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 0.15);
+    } catch (e) {}
+  }
+
+  playTransition() {
+    this.playTransitionSound();
   }
 
   // Silent return to orbit
@@ -1036,6 +1334,329 @@ class SoundEngine {
       osc.start(t);
       osc.stop(t + 0.24);
     } catch (e) {}
+  }
+
+  // 1. High-Tech Satellite Coordinate Target Lock Sound
+  // Triggered when user clicks START STORY: telemetry blips + resonant target acquisition chime
+  playLocateTargetSound() {
+    if (this.isMuted) return;
+    try {
+      this.init();
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      const t = this.ctx.currentTime;
+
+      // Telemetry frequency acquisition sweep: 4 rapid micro-pulses
+      const frequencies = [659.25, 880.0, 1174.66, 1567.98];
+      frequencies.forEach((freq, idx) => {
+        const stepTime = t + idx * 0.052;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, stepTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.04, stepTime + 0.04);
+
+        gain.gain.setValueAtTime(0.0001, stepTime);
+        gain.gain.linearRampToValueAtTime(0.09, stepTime + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.0001, stepTime + 0.048);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.start(stepTime);
+        osc.stop(stepTime + 0.05);
+      });
+
+      // Resonant coordinate lock confirmation chime at t + 0.24s
+      const lockTime = t + 0.24;
+      const lockOsc = this.ctx.createOscillator();
+      const lockFilter = this.ctx.createBiquadFilter();
+      const lockGain = this.ctx.createGain();
+
+      lockOsc.type = 'triangle';
+      lockOsc.frequency.setValueAtTime(1760.0, lockTime);
+
+      lockFilter.type = 'bandpass';
+      lockFilter.frequency.setValueAtTime(1760.0, lockTime);
+      lockFilter.Q.setValueAtTime(4.0, lockTime);
+
+      lockGain.gain.setValueAtTime(0.0001, lockTime);
+      lockGain.gain.linearRampToValueAtTime(0.14, lockTime + 0.015);
+      lockGain.gain.exponentialRampToValueAtTime(0.0001, lockTime + 0.75);
+
+      lockOsc.connect(lockFilter);
+      lockFilter.connect(lockGain);
+      lockGain.connect(this.masterGain);
+
+      lockOsc.start(lockTime);
+      lockOsc.stop(lockTime + 0.8);
+    } catch (e) {}
+  }
+
+  // 2. Exhilarating Orbital Atmospheric Zoom Dive Sound Effect
+  // Aerodynamic re-entry rush + sub-bass acceleration dive into Kutch salt desert (Majestic Orbital Descent)
+  playOrbitalZoomDive(customDuration = 3.6) {
+    if (this.isMuted) return;
+    try {
+      this.init();
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      const t = this.ctx.currentTime;
+      const duration = customDuration;
+
+      // Layer A: Aerodynamic atmospheric wind rush
+      const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.55;
+      }
+
+      const noiseSource = this.ctx.createBufferSource();
+      noiseSource.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(140, t);
+      filter.frequency.exponentialRampToValueAtTime(780, t + duration * 0.6);
+      filter.frequency.exponentialRampToValueAtTime(160, t + duration);
+      filter.Q.setValueAtTime(1.6, t);
+
+      const noiseGain = this.ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.0001, t);
+      noiseGain.gain.linearRampToValueAtTime(0.18, t + duration * 0.4);
+      noiseGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+      noiseSource.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(this.masterGain);
+
+      noiseSource.start(t);
+      noiseSource.stop(t + duration);
+
+      // Layer B: Kinetic sub-bass propulsion sweep (55 Hz -> 92 Hz -> 38 Hz)
+      const subOsc = this.ctx.createOscillator();
+      const subGain = this.ctx.createGain();
+
+      subOsc.type = 'sine';
+      subOsc.frequency.setValueAtTime(55, t);
+      subOsc.frequency.linearRampToValueAtTime(92, t + duration * 0.5);
+      subOsc.frequency.exponentialRampToValueAtTime(38, t + duration);
+
+      subGain.gain.setValueAtTime(0.0001, t);
+      subGain.gain.linearRampToValueAtTime(0.22, t + duration * 0.35);
+      subGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+      subOsc.connect(subGain);
+      subGain.connect(this.masterGain);
+
+      subOsc.start(t);
+      subOsc.stop(t + duration);
+    } catch (e) {}
+  }
+
+  // Atmospheric Cloud Tearing & Supersonic Breakthrough
+  // Synthesizes the rushing condensation vapor, atmospheric turbulence, and triumphant sonic cloudbreak
+  playAtmosphericCloudBreak() {
+    if (this.isMuted) return;
+    try {
+      this.init();
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      const t = this.ctx.currentTime;
+      const duration = 2.8;
+
+      // 1. Turbulent Rushing Cloud Vapor (Stereo Pinkish Noise)
+      const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+      const buffer = this.ctx.createBuffer(2, bufferSize, this.ctx.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const data = buffer.getChannelData(ch);
+        let b0 = 0, b1 = 0, b2 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = (Math.random() * 2 - 1) * 0.4;
+          b0 = 0.99765 * b0 + white * 0.0990460;
+          b1 = 0.96300 * b1 + white * 0.1600000;
+          b2 = 0.57000 * b2 + white * 0.4600000;
+          data[i] = (b0 + b1 + b2 + white * 0.08) * 0.65;
+        }
+      }
+
+      const cloudNoise = this.ctx.createBufferSource();
+      cloudNoise.buffer = buffer;
+
+      // Sweeping resonant bandpass filter simulating piercing through dense cumulus deck
+      const cloudFilter = this.ctx.createBiquadFilter();
+      cloudFilter.type = 'lowpass';
+      cloudFilter.frequency.setValueAtTime(280, t);
+      cloudFilter.frequency.exponentialRampToValueAtTime(2400, t + 1.2); // Tearing through the clouds
+      cloudFilter.frequency.exponentialRampToValueAtTime(450, t + duration); // Settling into calm desert air
+
+      const cloudGain = this.ctx.createGain();
+      cloudGain.gain.setValueAtTime(0.0001, t);
+      cloudGain.gain.linearRampToValueAtTime(0.24, t + 0.8);
+      cloudGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+      cloudNoise.connect(cloudFilter);
+      cloudFilter.connect(cloudGain);
+      cloudGain.connect(this.masterGain);
+
+      cloudNoise.start(t);
+      cloudNoise.stop(t + duration);
+
+      // 2. Deep Sub-Sonic Sonic Boom / Cloudbreak Thud
+      const thudOsc = this.ctx.createOscillator();
+      thudOsc.type = 'sine';
+      thudOsc.frequency.setValueAtTime(110, t + 0.9);
+      thudOsc.frequency.exponentialRampToValueAtTime(32, t + 2.2);
+
+      const thudGain = this.ctx.createGain();
+      thudGain.gain.setValueAtTime(0.0001, t + 0.9);
+      thudGain.gain.linearRampToValueAtTime(0.28, t + 1.1);
+      thudGain.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+
+      thudOsc.connect(thudGain);
+      thudGain.connect(this.masterGain);
+
+      thudOsc.start(t + 0.9);
+      thudOsc.stop(t + 2.4);
+
+      // 3. Shimmering Crystal Air Bloom (Emerging into the sunlit White Desert)
+      [587.33, 880.0, 1174.66, 1760.0].forEach((freq, idx) => {
+        const chime = this.ctx.createOscillator();
+        const chimeGain = this.ctx.createGain();
+        chime.type = 'sine';
+        chime.frequency.setValueAtTime(freq, t + 1.3 + idx * 0.08);
+
+        chimeGain.gain.setValueAtTime(0.0001, t + 1.3 + idx * 0.08);
+        chimeGain.gain.linearRampToValueAtTime(0.06, t + 1.4 + idx * 0.08);
+        chimeGain.gain.exponentialRampToValueAtTime(0.0001, t + 2.7);
+
+        chime.connect(chimeGain);
+        chimeGain.connect(this.masterGain);
+
+        chime.start(t + 1.3 + idx * 0.08);
+        chime.stop(t + 2.7);
+      });
+    } catch (e) {}
+  }
+
+  // 3. Cinematic "Destination Arrived" Touchdown & Horizon Reveal Sound
+  // Awe-inspiring destination arrival: warm deceleration sough, grounding sub, harmonic chord bloom, and crystal confirmation chime
+  playDestinationArrivedSound() {
+    if (this.isMuted) return;
+    try {
+      this.init();
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      const t = this.ctx.currentTime;
+
+      // Layer 1: Deceleration Touchdown Air Sough (smooth atmospheric settling)
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.95);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.40;
+      }
+
+      const noiseSource = this.ctx.createBufferSource();
+      noiseSource.buffer = buffer;
+
+      const airFilter = this.ctx.createBiquadFilter();
+      airFilter.type = 'lowpass';
+      airFilter.frequency.setValueAtTime(750, t);
+      airFilter.frequency.exponentialRampToValueAtTime(140, t + 0.85);
+
+      const airGain = this.ctx.createGain();
+      airGain.gain.setValueAtTime(0.0001, t);
+      airGain.gain.linearRampToValueAtTime(0.14, t + 0.08);
+      airGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.95);
+
+      noiseSource.connect(airFilter);
+      airFilter.connect(airGain);
+      airGain.connect(this.masterGain);
+
+      noiseSource.start(t);
+      noiseSource.stop(t + 0.95);
+
+      // Layer 2: Warm Earthen Touchdown Foundation (58 Hz -> 42 Hz sub settle)
+      const subOsc = this.ctx.createOscillator();
+      const subGain = this.ctx.createGain();
+      subOsc.type = 'sine';
+      subOsc.frequency.setValueAtTime(58, t);
+      subOsc.frequency.exponentialRampToValueAtTime(42, t + 0.7);
+
+      subGain.gain.setValueAtTime(0.0001, t);
+      subGain.gain.linearRampToValueAtTime(0.18, t + 0.04);
+      subGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.85);
+
+      subOsc.connect(subGain);
+      subGain.connect(this.masterGain);
+      subOsc.start(t);
+      subOsc.stop(t + 0.9);
+
+      // Layer 3: Celestial "Destination Arrived" Harmonic Chord (D Major Pentatonic Bloom)
+      // D3 (146.83 Hz), A3 (220.00 Hz), F#4 (369.99 Hz), D5 (587.33 Hz)
+      const chordFrequencies = [
+        { freq: 146.83, delay: 0.00, vol: 0.12, decay: 1.15, type: 'sine' },
+        { freq: 220.00, delay: 0.02, vol: 0.10, decay: 1.20, type: 'triangle' },
+        { freq: 369.99, delay: 0.04, vol: 0.09, decay: 1.25, type: 'sine' },
+        { freq: 587.33, delay: 0.06, vol: 0.08, decay: 1.30, type: 'triangle' },
+      ];
+
+      chordFrequencies.forEach(note => {
+        const noteTime = t + note.delay;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = note.type;
+        osc.frequency.setValueAtTime(note.freq, noteTime);
+
+        gain.gain.setValueAtTime(0.0001, noteTime);
+        gain.gain.linearRampToValueAtTime(note.vol, noteTime + 0.035);
+        gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + note.decay);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.start(noteTime);
+        osc.stop(noteTime + note.decay + 0.05);
+      });
+
+      // Layer 4: Glassy High Confirmation Chime (Tactile "Destination Arrived" dual tone)
+      // Plays two crisp, shimmering crystalline notes: 880 Hz (A5) -> 1320 Hz (E6)
+      const chimes = [
+        { freq: 880.0, timeOffset: 0.07, vol: 0.09 },
+        { freq: 1320.0, timeOffset: 0.16, vol: 0.11 }
+      ];
+
+      chimes.forEach(chime => {
+        const chimeTime = t + chime.timeOffset;
+        const chimeOsc = this.ctx.createOscillator();
+        const chimeFilter = this.ctx.createBiquadFilter();
+        const chimeGain = this.ctx.createGain();
+
+        chimeOsc.type = 'sine';
+        chimeOsc.frequency.setValueAtTime(chime.freq, chimeTime);
+
+        chimeFilter.type = 'bandpass';
+        chimeFilter.frequency.setValueAtTime(chime.freq, chimeTime);
+        chimeFilter.Q.setValueAtTime(6.0, chimeTime);
+
+        chimeGain.gain.setValueAtTime(0.0001, chimeTime);
+        chimeGain.gain.linearRampToValueAtTime(chime.vol, chimeTime + 0.012);
+        chimeGain.gain.exponentialRampToValueAtTime(0.0001, chimeTime + 0.85);
+
+        chimeOsc.connect(chimeFilter);
+        chimeFilter.connect(chimeGain);
+        chimeGain.connect(this.masterGain);
+
+        chimeOsc.start(chimeTime);
+        chimeOsc.stop(chimeTime + 0.9);
+      });
+
+    } catch (e) {}
+  }
+
+  // Backward compatible alias
+  playTransitImpactSound() {
+    this.playDestinationArrivedSound();
   }
 }
 

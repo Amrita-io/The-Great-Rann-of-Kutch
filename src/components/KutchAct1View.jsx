@@ -55,7 +55,7 @@ export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
 
   // 3. Section Visibility Observer:
   // - While on Hero Section (video active): ZERO background music plays!
-  // - When on Radar Showcase Section: video pauses and matching telemetry audio engages.
+  // - When on Radar Showcase Section: video pauses, and @Sounds/Act-1/The_Vast_Salt_Mirror.mp3 plays gently
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -63,6 +63,7 @@ export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
           if (entry.target.id === 'sx-act1-hero-section') {
             if (entry.isIntersecting) {
               setIsViewingRadar(false);
+              soundEngine.pauseSaltMirrorMusic();
               soundEngine.silenceAllBackgroundMusic();
               if (videoRef.current) {
                 videoRef.current.play().catch(() => {});
@@ -75,6 +76,13 @@ export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
           } else if (entry.target.id === 'sx-act1-radar-section') {
             if (entry.isIntersecting) {
               setIsViewingRadar(true);
+              if (videoRef.current) {
+                videoRef.current.pause();
+              }
+              // Light, elegant background music for Act-1 Radar Showcase
+              soundEngine.playSaltMirrorMusic(0.20);
+            } else {
+              soundEngine.pauseSaltMirrorMusic();
             }
           }
         });
@@ -85,7 +93,10 @@ export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
     if (heroSectionRef.current) observer.observe(heroSectionRef.current);
     if (radarSectionRef.current) observer.observe(radarSectionRef.current);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      soundEngine.pauseSaltMirrorMusic();
+    };
   }, []);
 
   // 4. Cinematic Typographical Entrance Animation
@@ -152,6 +163,8 @@ export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
 
   // Return to Central 5-Acts Diorama via Black Fade-Out
   const handleReturnToDiorama = useCallback(() => {
+    soundEngine.pauseSaltMirrorMusic();
+    soundEngine.silenceAllBackgroundMusic();
     setFadeState('fading-out');
 
     setTimeout(() => {
@@ -160,6 +173,19 @@ export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
       }
     }, 700);
   }, [onBackToDiorama]);
+
+  // Return to Orbit
+  const handleReturnToOrbit = useCallback(() => {
+    soundEngine.pauseSaltMirrorMusic();
+    soundEngine.silenceAllBackgroundMusic();
+    setFadeState('fading-out');
+
+    setTimeout(() => {
+      if (onReturnToOrbit) {
+        onReturnToOrbit();
+      }
+    }, 700);
+  }, [onReturnToOrbit]);
 
   return (
     <div
@@ -242,36 +268,42 @@ export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
         {/* Deep Filmic Vignette for Text Legibility */}
         <div className="sx-act1-vignette" />
 
-        {/* Top Navigation Bar */}
-        <nav className="relative z-30 flex items-center justify-between p-4 sm:p-7 md:p-9 font-mono text-[9px] sm:text-[10px] tracking-widest uppercase text-white/80">
-          <button
-            onClick={handleReturnToDiorama}
-            onMouseEnter={() => soundEngine.playHover()}
-            className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 bg-black/40 hover:bg-white/15 backdrop-blur-md transition-all cursor-pointer text-white shadow-lg"
-          >
-            <span>← 5 ACTS DIORAMA</span>
-          </button>
+        {/* Top Navigation Bar: Minimalist Luxury Inspired by Reference */}
+        <nav className="relative z-30 flex items-center justify-between p-6 sm:p-8 md:p-10 font-sans text-xs tracking-[0.25em] uppercase text-white/70">
+          <div className="flex items-center gap-6">
+            <button
+              onClick={handleReturnToDiorama}
+              onMouseEnter={() => soundEngine.playHover()}
+              className="text-white/70 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
+            >
+              <span>← RETURN</span>
+            </button>
+            <span className="text-white/30 hidden sm:inline">|</span>
+            <span className="text-white/50 hidden sm:inline font-['Cinzel',serif] tracking-[0.2em]">
+              ACT I • SILENCE
+            </span>
+          </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-6 sm:gap-8">
             <button
               onClick={scrollToRadar}
               onMouseEnter={() => soundEngine.playHover()}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-cyan-400/40 bg-cyan-950/60 hover:bg-cyan-900/80 backdrop-blur-md transition-all cursor-pointer text-cyan-300 font-mono text-[9px] sm:text-[10px] tracking-widest shadow-[0_0_12px_rgba(56,189,248,0.3)]"
+              className="text-white/70 hover:text-cyan-300 transition-colors cursor-pointer"
             >
-              <span>RADAR SHOWCASE ↓</span>
+              RADAR SHOWCASE ↓
             </button>
             <button
               onClick={handleReplayVideo}
               onMouseEnter={() => soundEngine.playHover()}
-              className="px-3.5 py-1.5 rounded-full border border-white/15 bg-black/40 hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer text-white/70 hover:text-white"
+              className="text-white/50 hover:text-white transition-colors cursor-pointer hidden md:inline"
             >
               ↻ REPLAY
             </button>
             {onReturnToOrbit && (
               <button
-                onClick={onReturnToOrbit}
+                onClick={handleReturnToOrbit}
                 onMouseEnter={() => soundEngine.playHover()}
-                className="px-3.5 py-1.5 rounded-full border border-white/15 bg-black/40 hover:bg-white/10 backdrop-blur-md transition-all cursor-pointer text-white/70 hover:text-white"
+                className="text-white/70 hover:text-white transition-colors cursor-pointer"
               >
                 ORBIT →
               </button>
@@ -325,7 +357,7 @@ export default function KutchAct1View({ onBackToDiorama, onReturnToOrbit }) {
           isActive={isViewingRadar}
           onBackToAct1={scrollToHero}
           onBackToDiorama={handleReturnToDiorama}
-          onReturnToOrbit={onReturnToOrbit}
+          onReturnToOrbit={handleReturnToOrbit}
         />
       </section>
 

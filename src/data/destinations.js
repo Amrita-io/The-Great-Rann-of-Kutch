@@ -11,10 +11,10 @@ export const DESTINATIONS = [
     },
     subtitle: 'The Endless White Desert',
     tagline: 'Where the Earth dissolves into boundless crystalline white under moonlit skies.',
-    heroImage: '/assets/rann-of-kutch-twilight.jpg',
-    auraImage: '/assets/desert-aura.jpg',
+    heroImage: '/assets/wild_ass_herd.jpg',
+    auraImage: '/assets/layers/kutch_optical_satellite_true.jpg',
     description:
-      'Stretching across 7,500 square kilometers of western India along the Tropic of Cancer, the Great Rann of Kutch is one of the world\'s largest salt deserts. During winter twilights and full-moon nights, the vast white salt bed mirrors the celestial expanse, glowing like an ethereal silver ocean.',
+      'Stretching across the 7,505 square kilometer Kutch Desert Wildlife Sanctuary along the Tropic of Cancer, the Great Rann of Kutch is one of the world\'s largest seasonal salt deserts. During winter twilights and full-moon nights, the vast white salt bed mirrors the celestial expanse, glowing like an ethereal silver ocean.',
     weather: {
       temp: '24°C',
       tempF: '75°F',

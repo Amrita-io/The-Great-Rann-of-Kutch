@@ -1,0 +1,87 @@
+{
+  "bbox": {
+    "minLon": 69.45,
+    "minLat": 23.68,
+    "maxLon": 70.75,
+    "maxLat": 24.28,
+    "utmX": [
+      545882.8,
+      677625.6
+    ],
+    "utmY": [
+      2618871.2,
+      2686342.7
+    ]
+  },
+  "sensor": "NASA-ISRO NISAR L-Band (24 cm / 1.25 GHz)",
+  "productLevel": "L2 GCOV (Geocoded Covariance)",
+  "waterThresholdDb": -18.0,
+  "stops": {
+    "july": {
+      "id": "july",
+      "stopLabel": "JUL \u00b7 INGRESS",
+      "date": "July 12, 2026",
+      "granuleId": "NISAR_L2_PR_GCOV_025_063_D_076_2005_DHDH_M_20260712T135737_20260712T135812_P05023_N_F_J_001",
+      "track": 63,
+      "frame": 76,
+      "floodBasinKm2": 4822.7,
+      "vegetationHvDb": -21.55,
+      "backscatterSigma0Db": -19.0,
+      "surfaceState": "Monsoon Inundation Ingress (High Brine Saturation)",
+      "imagePath": "/assets/layers/act2_ingress.webp",
+      "dimensions": {
+        "width": 1647,
+        "height": 844
+      },
+      "stats": {
+        "minHhDb": -44.99,
+        "medianHhDb": -19.42,
+        "maxHhDb": 11.66
+      }
+    },
+    "august": {
+      "id": "august",
+      "stopLabel": "AUG \u00b7 PEAK",
+      "date": "August 29, 2026",
+      "granuleId": "NISAR_L2_PR_GCOV_029_063_D_076_2005_QPDH_A_20260829T135735_20260829T135809_P05023_N_F_J_001",
+      "track": 63,
+      "frame": 76,
+      "floodBasinKm2": 3242.2,
+      "vegetationHvDb": -20.85,
+      "backscatterSigma0Db": -18.09,
+      "surfaceState": "Peak Flood Inundation (Specular Basin Sea)",
+      "imagePath": "/assets/layers/act2_peak_flood.webp",
+      "dimensions": {
+        "width": 1647,
+        "height": 844
+      },
+      "stats": {
+        "minHhDb": -43.7,
+        "medianHhDb": -17.65,
+        "maxHhDb": 14.73
+      }
+    },
+    "october": {
+      "id": "october",
+      "stopLabel": "OCT \u00b7 SAVANNA",
+      "date": "October 28, 2026",
+      "granuleId": "NISAR_L2_PR_GCOV_034_063_D_076_4005_DHDH_A_20261028T135735_20261028T135810_P05036_N_F_J_001",
+      "track": 63,
+      "frame": 76,
+      "floodBasinKm2": 5097.3,
+      "vegetationHvDb": -22.1,
+      "backscatterSigma0Db": -20.03,
+      "surfaceState": "Drying Halite Crust & Savanna Pasture Bloom",
+      "imagePath": "/assets/layers/act3_october_nisar.webp",
+      "dimensions": {
+        "width": 1647,
+        "height": 844
+      },
+      "stats": {
+        "minHhDb": -48.71,
+        "medianHhDb": -20.55,
+        "maxHhDb": 14.56
+      }
+    }
+  }
+}

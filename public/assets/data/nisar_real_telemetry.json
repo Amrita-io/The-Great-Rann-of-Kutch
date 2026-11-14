@@ -1,0 +1,129 @@
+{
+  "metadata": {
+    "granule_id": "NISAR_L2_PR_GCOV_034_063_D_076_4005_DHDH_A_20261028T135735_20261028T135810_P05036_N_F_J_001",
+    "mission": "NISAR (NASA JPL / ISRO SAC)",
+    "instrument": "LSAR (24 cm L-Band, 1.25 GHz)",
+    "product_level": "L2 GCOV (Geocoded Covariance)",
+    "orbit": 6563,
+    "track": 63,
+    "frame": 76,
+    "pass_direction": "Descending",
+    "processing_center": "JPL",
+    "processing_date": "2026-11-09T12:22:36",
+    "doi": "10.5067/NIL2GCOV-V1",
+    "projection": "EPSG:32642 (UTM Zone 42N, WGS84)"
+  },
+  "processing_parameters": {
+    "bounding_box_utm42n": {
+      "x_min": 540000.0,
+      "x_max": 700000.0,
+      "y_min": 2640000.0,
+      "y_max": 2800000.0,
+      "width_km": 160.0,
+      "height_km": 160.0
+    },
+    "dynamic_range_db": [
+      -26.0,
+      -4.0
+    ],
+    "frequency_band": "LSAR Frequency B (80m) & Frequency A (10m)"
+  },
+  "key_telemetry_stations": [
+    {
+      "id": "subsurface-aquifer",
+      "name": "Subterranean Brine Aquifer",
+      "description": "Subterranean saltwater ocean 38 cm beneath dry crust",
+      "approx_coordinates": "24.1\u00b0N, 70.7\u00b0E",
+      "utm_coordinates": "X: 658000m, Y: 2682000m (UTM Zone 42N)",
+      "pin_x_pct": 73.8,
+      "pin_y_pct": 73.8,
+      "real_sar_measurements": {
+        "sigma0_hh_db": -21.35,
+        "sigma0_hv_db": -24.56,
+        "dual_pol_ratio_db": 3.21,
+        "dielectric_permittivity_er": 68.5,
+        "surface_roughness_rms_cm": 0.75
+      }
+    },
+    {
+      "id": "radar-mirror",
+      "name": "Central Specular Calibration Mirror",
+      "description": "World's flattest natural radar calibration target",
+      "approx_coordinates": "24.47\u00b0N, 70.37\u00b0E",
+      "utm_coordinates": "X: 623000m, Y: 2705000m (UTM Zone 42N)",
+      "pin_x_pct": 51.9,
+      "pin_y_pct": 59.4,
+      "real_sar_measurements": {
+        "sigma0_hh_db": -15.31,
+        "sigma0_hv_db": -20.15,
+        "dual_pol_ratio_db": 4.85,
+        "dielectric_permittivity_er": 3.18,
+        "surface_roughness_rms_cm": 0.35
+      }
+    },
+    {
+      "id": "allah-bund",
+      "name": "Allah Bund 1819 Earthquake Fault",
+      "description": "90 km seismotectonic fault scarp from 1819 M7.7 earthquake",
+      "approx_coordinates": "24.55\u00b0N, 69.85\u00b0E",
+      "utm_coordinates": "X: 585000m, Y: 2735000m (UTM Zone 42N)",
+      "pin_x_pct": 28.1,
+      "pin_y_pct": 40.6,
+      "real_sar_measurements": {
+        "sigma0_hh_db": -13.83,
+        "sigma0_hv_db": -20.05,
+        "dual_pol_ratio_db": 6.22,
+        "dielectric_permittivity_er": 4.85,
+        "surface_roughness_rms_cm": 3.4
+      }
+    },
+    {
+      "id": "flamingo-city",
+      "name": "Khadir Bet / Flamingo City Sanctuary",
+      "description": "Elevated island sanctuary protected during seasonal flood",
+      "approx_coordinates": "24.23\u00b0N, 70.53\u00b0E",
+      "utm_coordinates": "X: 645000m, Y: 2675000m (UTM Zone 42N)",
+      "pin_x_pct": 65.6,
+      "pin_y_pct": 78.1,
+      "real_sar_measurements": {
+        "sigma0_hh_db": -21.41,
+        "sigma0_hv_db": -25.31,
+        "dual_pol_ratio_db": 3.9,
+        "dielectric_permittivity_er": 78.2,
+        "surface_roughness_rms_cm": 1.85
+      }
+    },
+    {
+      "id": "paleo-river",
+      "name": "Ancient Paleo-Channel Drainage",
+      "description": "Buried ancient fluvial channels revealed by microwave penetration",
+      "approx_coordinates": "24.08\u00b0N, 70.13\u00b0E",
+      "utm_coordinates": "X: 607000m, Y: 2662000m (UTM Zone 42N)",
+      "pin_x_pct": 41.9,
+      "pin_y_pct": 86.2,
+      "real_sar_measurements": {
+        "sigma0_hh_db": -26.11,
+        "sigma0_hv_db": -25.84,
+        "dual_pol_ratio_db": -0.27,
+        "dielectric_permittivity_er": 5.4,
+        "surface_roughness_rms_cm": 1.2
+      }
+    },
+    {
+      "id": "banni-grasslands",
+      "name": "Banni Savanna North Frontier",
+      "description": "Asia's largest tropical grassland reserve; seasonal biomass surge following monsoon inundation",
+      "approx_coordinates": "23.88\u00b0N, 69.83\u00b0E",
+      "utm_coordinates": "X: 585000m, Y: 2645000m (UTM Zone 42N)",
+      "pin_x_pct": 28.1,
+      "pin_y_pct": 96.9,
+      "real_sar_measurements": {
+        "sigma0_hh_db": -6.88,
+        "sigma0_hv_db": -13.71,
+        "dual_pol_ratio_db": 6.83,
+        "dielectric_permittivity_er": 18.5,
+        "surface_roughness_rms_cm": 2.4
+      }
+    }
+  ]
+}

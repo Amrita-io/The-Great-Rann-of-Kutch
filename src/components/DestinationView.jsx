@@ -1,9 +1,44 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { gsap } from 'gsap';
+import {
+  ArrowRight,
+  Globe,
+  Compass,
+  Volume2
+} from 'lucide-react';
 import { soundEngine } from '../utils/audio';
-import KutchRealityDioramaView from './KutchRealityDioramaView';
-import KutchAct1View from './KutchAct1View';
+import NisarShowcaseView from './NisarShowcaseView';
+import SeasonalDanceTimelineView from './visualizers/SeasonalDanceTimelineView';
+import MonsoonFloodDataView from './visualizers/MonsoonFloodDataView';
+import CinematicVideoScene from './CinematicVideoScene';
+import ClimateSyncReflectionScene from './ClimateSyncReflectionScene';
+import {
+  OutroStationView
+} from './ExpeditionStoryFlow';
 
+/**
+ * DestinationView (Documentary Sequential Journey Conductor)
+ * 
+ * Flow requested by user:
+ * orbit view
+ *   ↓
+ * train scene (/vid/train.mp4)
+ *   ↓
+ * winter NISAR data (Season 01: Arid Salt Crust & Subsurface Interface)
+ *   ↓
+ * monsoon intro vid (/vid/monsoon_ride.mp4 -> /vid/rain_loop.mp4)
+ *   ↓
+ * monsoon NISAR data (Season 02: The Vanishing Inland Sea & Flood Dynamics)
+ *   ↓
+ * vegetation intro vid (/vid/veg.mp4)
+ *   ↓
+ * vegetation data + picture encyclopedia (Season 03: Canopy Slicer & Banni Biosphere Sync)
+ *   ↓
+ * scene + text: "Is this sync between nature and biological life changing?" (ClimateSyncReflectionScene)
+ *   ↓
+ * end video / outro station (/vid/kutch-scroll.mp4 + Gujarati folk music)
+ *   ↓
+ * back to orbit view
+ */
 export default function DestinationView({
   destination,
   onBackToOrbit,
@@ -13,551 +48,534 @@ export default function DestinationView({
 }) {
   const containerRef = useRef(null);
   const videoRef = useRef(null);
-  const navRef = useRef(null);
-  const giantTitleRef = useRef(null);
-  const bottomContentRef = useRef(null);
+  const monsoonVideoRef = useRef(null);
+  const savannaVideoRef = useRef(null);
 
-  // Discrete Screen Slabs: 'hero' | 'diorama'
-  // (Zero halfway scrolling: the user is strictly in either this or that slab!)
-  const [currentSlab, setCurrentSlab] = useState('hero');
+  // Flow State Machine:
+  // 'train-transit' -> 'winter-nisar' -> 'monsoon-intro' -> 'monsoon-nisar' ->
+  // 'vegetation-intro' -> 'vegetation-nisar' ->
+  // 'sync-reflection' -> 'outro-station'
+  const [flowStep, setFlowStep] = useState('train-transit');
   const [isSlabTransitioning, setIsSlabTransitioning] = useState(false);
+  const [trainTime, setTrainTime] = useState(0);
 
-  // Dedicated full-screen sub-view for Act 1: null | 'act-1'
-  const [activeActView, setActiveActView] = useState(null);
+  // Transition controller with sound effect & cinematic cross-fade
+  const navigateToStep = useCallback((stepId) => {
+    let nextStep = stepId;
+    if (stepId === 'winter-intro') nextStep = 'train-transit';
 
-  // Audio & Video Coordination:
-  // 1. When video is playing (Home hero or Act-1 video): ZERO background music plays!
-  // 2. When home hero video ends and user enters 5 Acts island:
-  //    Play @Sounds/Home/Breath_of_the_Rann.mp3 gently in the background!
-  useEffect(() => {
-    if (activeActView || currentSlab === 'hero') {
-      soundEngine.silenceAllBackgroundMusic();
-      if (videoRef.current) {
-        if (activeActView) {
-          videoRef.current.pause();
-        } else {
-          videoRef.current.play().catch(() => {});
-        }
-      }
-    } else if (currentSlab === 'diorama' && !activeActView) {
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
-      // User is exploring the 5 Acts island: play Breath of the Rann gently
-      soundEngine.playBreathOfTheRann(0.22);
-    }
-  }, [activeActView, currentSlab]);
+    try {
+      soundEngine.playTransitionSound();
+    } catch (e) { }
 
-  // Clean discrete transition between Hero and Diorama slabs (Silent, smooth black cross-fade)
-  const transitionToSlab = useCallback((targetSlab) => {
-    if (isSlabTransitioning || currentSlab === targetSlab) return;
     setIsSlabTransitioning(true);
 
     setTimeout(() => {
-      setCurrentSlab(targetSlab);
+      setFlowStep(nextStep);
+      if (nextStep === 'train-transit') {
+        setTrainTime(0);
+      }
+
+      // STRICT AUDIO ENFORCEMENT:
+      // Pause any ongoing train transit video whenever leaving train-transit
+      if (videoRef.current && nextStep !== 'train-transit') {
+        videoRef.current.pause();
+      }
+
+      // Music plays ONLY on data presentation pages!
+      // In any intro scene or video, silence all background music!
+      // While outro-2.mp4 plays, make sure NO other audio or video plays with it until it ends!
+      if (nextStep === 'outro-station') {
+        soundEngine.silenceAllBackgroundMusic();
+        soundEngine.pauseRegionalOutroMusic();
+      } else if (
+        nextStep === 'winter-nisar' ||
+        nextStep === 'monsoon-data' ||
+        nextStep === 'monsoon-dance' ||
+        nextStep === 'vegetation-nisar'
+      ) {
+        soundEngine.playBreathOfTheRann(0.24);
+      } else {
+        // Any intro video or transition ('train-transit', 'monsoon-intro', 'vegetation-intro', 'sync-reflection')
+        soundEngine.silenceAllBackgroundMusic();
+        if (nextStep === 'train-transit') {
+          const v = videoRef.current;
+          if (v) {
+            v.currentTime = 0;
+            v.muted = soundEngine.isMuted;
+            v.volume = 0.85;
+            v.play().catch(() => { });
+          }
+        }
+      }
+
       setTimeout(() => {
         setIsSlabTransitioning(false);
-      }, 100);
-    }, 500);
-  }, [currentSlab, isSlabTransitioning]);
+      }, 250);
+    }, 350);
+  }, []);
 
-  const goToDiorama = useCallback(() => {
-    transitionToSlab('diorama');
-  }, [transitionToSlab]);
+  // When train video ends or is skipped, advance to Winter NISAR
+  const handleTrainVideoEnded = useCallback(() => {
+    const v = videoRef.current;
+    if (v) v.pause();
+    navigateToStep('winter-nisar');
+  }, [navigateToStep]);
 
-  const goToHero = useCallback(() => {
-    transitionToSlab('hero');
-  }, [transitionToSlab]);
+  // Handle train video time updates
+  const handleTimeUpdate = useCallback(() => {
+    const v = videoRef.current;
+    if (!v || flowStep !== 'train-transit') return;
+    setTrainTime(v.currentTime);
+    if (v.duration && v.currentTime >= v.duration - 0.25) {
+      handleTrainVideoEnded();
+    }
+  }, [flowStep, handleTrainVideoEnded]);
 
-  // Wheel Gesture Interception: strictly moves between discrete slabs (zero halfway scrolling!)
+  // Keyboard shortcut to skip train scene
   useEffect(() => {
-    const handleWheel = (e) => {
-      if (activeActView || isSlabTransitioning) return;
-
-      if (currentSlab === 'hero' && e.deltaY > 25) {
-        goToDiorama();
-      } else if (currentSlab === 'diorama' && e.deltaY < -25) {
-        goToHero();
+    const handleKeyDown = (e) => {
+      if (['INPUT', 'TEXTAREA'].includes(e.target?.tagName)) return;
+      if (flowStep === 'train-transit' && (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight')) {
+        handleTrainVideoEnded();
       }
     };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [flowStep, handleTrainVideoEnded]);
 
-    window.addEventListener('wheel', handleWheel, { passive: true });
-    return () => window.removeEventListener('wheel', handleWheel);
-  }, [currentSlab, activeActView, isSlabTransitioning, goToDiorama, goToHero]);
-
-  // Cinematic Choreography on Mount
+  // Video autoplay & background music initialization
   useEffect(() => {
+    soundEngine.silenceAllBackgroundMusic();
     soundEngine.setMode('destination');
 
-    if (videoRef.current) {
-      videoRef.current.muted = soundEngine.isMuted;
-      videoRef.current.volume = 0.75;
-      videoRef.current.play().catch(() => {});
+    const v = videoRef.current;
+    if (v) {
+      v.muted = soundEngine.isMuted;
+      v.volume = 0.85;
+      const playPromise = v.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          if (v) {
+            v.muted = true;
+            v.play().catch(() => { });
+          }
+        });
+      }
     }
 
     const unsub = soundEngine.subscribe((muted) => {
-      if (videoRef.current) {
-        videoRef.current.muted = muted;
-      }
+      if (videoRef.current) videoRef.current.muted = muted;
     });
 
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-
-      gsap.set(giantTitleRef.current, {
-        opacity: 0,
-        scale: 0.90,
-        y: 25,
-        filter: 'blur(16px)'
-      });
-
-      gsap.set(bottomContentRef.current, {
-        opacity: 0,
-        y: 35
-      });
-
-      gsap.set(navRef.current, {
-        opacity: 0,
-        y: -30
-      });
-
-      tl.to(giantTitleRef.current, {
-        opacity: 0.95,
-        scale: 1.0,
-        y: 0,
-        filter: 'blur(0px)',
-        duration: 2.2,
-        ease: 'power2.out',
-        delay: 0.4
-      })
-      .to(bottomContentRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 1.4,
-        ease: 'power2.out'
-      }, "-=0.8")
-      .to(navRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 1.2,
-        ease: 'power2.out'
-      }, "+=0.2");
-
-    }, containerRef);
-
-    return () => {
-      unsub();
-      ctx.revert();
-    };
+    return () => unsub();
   }, []);
 
-  const handleReturn = () => {
-    soundEngine.silenceAllBackgroundMusic();
-    soundEngine.setMode('globe');
-    gsap.to(containerRef.current, {
-      opacity: 0,
-      duration: 0.6,
-      ease: 'power2.in',
-      onComplete: onBackToOrbit
-    });
+  // Waypoints for the top typographic bar (4 Seasonal Stations)
+  const WAYPOINTS = [
+    { id: 'winter-intro', label: '01. WINTER' },
+    { id: 'monsoon-intro', label: '02. MONSOON' },
+    { id: 'vegetation-intro', label: '03. SAVANNA' },
+    { id: 'outro-station', label: '04. OUTRO' }
+  ];
+
+  const getActiveWaypointId = () => {
+    if (flowStep === 'train-transit' || flowStep === 'winter-nisar') return 'winter-intro';
+    if (flowStep === 'monsoon-intro' || flowStep === 'monsoon-data' || flowStep === 'monsoon-dance' || flowStep === 'monsoon-nisar') return 'monsoon-intro';
+    if (flowStep === 'vegetation-intro' || flowStep === 'vegetation-nisar') return 'vegetation-intro';
+    if (flowStep === 'outro-station' || flowStep === 'sync-reflection') return 'outro-station';
+    return 'winter-intro';
   };
 
-  // Auto-switch to diorama when hero video is nearing completion
-  const handleVideoTimeUpdate = () => {
-    if (currentSlab !== 'hero' || !videoRef.current) return;
-    const v = videoRef.current;
-    if (v.duration && v.currentTime >= v.duration - 0.9) {
-      goToDiorama();
-    }
-  };
-
-  const handleVideoEnded = () => {
-    if (currentSlab === 'hero') {
-      goToDiorama();
-    }
-  };
+  const activeWaypointId = getActiveWaypointId();
 
   return (
     <div
       ref={containerRef}
-      className="relative w-screen h-screen overflow-hidden bg-[#030508] text-[#f8fafc] font-['Montserrat',sans-serif] select-none"
+      className="relative w-full h-screen overflow-hidden bg-black text-[#faf7f2] font-sans select-none"
     >
-      <style>{`
-        /* Pinned Fullscreen Hero Slab */
-        .hero-slab {
-          position: absolute;
-          inset: 0;
-          width: 100vw;
-          height: 100vh;
-          overflow: hidden;
-        }
-
-        /* Auto-playing Background Video */
-        .bg-video {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transform: translate(-50%, -50%);
-          z-index: 1;
-        }
-
-        /* Dark Vignette Overlay for Text Legibility */
-        .vignette-overlay {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at center, transparent 35%, rgba(3, 5, 8, 0.55) 100%),
-                      linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 22%, transparent 75%, rgba(3, 5, 8, 0.90) 100%);
-          z-index: 2;
-          pointer-events: none;
-        }
-
-        /* Top Navigation (Appears AT LAST) */
-        .nav-bar {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          padding: 2.2rem 4rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          z-index: 10;
-          font-size: 0.78rem;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          font-weight: 400;
-          pointer-events: auto;
-          opacity: 0;
-        }
-
-        @media (max-width: 640px) {
-          .nav-bar {
-            padding: 1.5rem 1.25rem;
-            font-size: 0.70rem;
-            letter-spacing: 0.16em;
-          }
-        }
-
-        .nav-links {
-          display: flex;
-          gap: 2.5rem;
-          list-style: none;
-        }
-
-        @media (max-width: 640px) {
-          .nav-links {
-            gap: 1.25rem;
-          }
-        }
-
-        .nav-links button, .nav-links a {
-          color: rgba(255, 255, 255, 0.70);
-          background: transparent;
-          border: none;
-          font-family: inherit;
-          font-size: inherit;
-          letter-spacing: inherit;
-          text-transform: inherit;
-          cursor: pointer;
-          transition: all 0.25s ease;
-        }
-
-        .nav-links button:hover, .nav-links a:hover {
-          color: #ffffff;
-        }
-
-        /* Giant Backdrop Title (Cleanly elevated in the clear dusk sky above musicians) */
-        .giant-title {
-          position: absolute;
-          top: 16%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          font-family: 'Cinzel', serif;
-          text-align: center;
-          z-index: 3;
-          pointer-events: none;
-          width: 92%;
-          max-width: 1200px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          opacity: 0;
-          user-select: none;
-        }
-
-        .title-eyebrow {
-          font-family: 'Inter', 'Montserrat', sans-serif;
-          font-size: clamp(0.65rem, 0.85vw, 0.80rem);
-          font-weight: 400;
-          letter-spacing: 0.35em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.60);
-          margin-bottom: 0.6rem;
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-
-        .title-eyebrow-line {
-          width: 24px;
-          height: 1px;
-          background: rgba(255, 255, 255, 0.25);
-        }
-
-        .title-hero {
-          font-family: 'Cinzel', serif;
-          font-size: clamp(2.2rem, 5.2vw, 4.8rem);
-          font-weight: 500;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          line-height: 1.05;
-          color: #ffffff;
-          text-shadow: 0 4px 28px rgba(0, 0, 0, 0.85);
-          display: block;
-        }
-
-        .title-sub {
-          font-family: 'Cinzel', serif;
-          font-size: clamp(0.72rem, 1.1vw, 0.95rem);
-          font-weight: 300;
-          letter-spacing: 0.34em;
-          text-transform: uppercase;
-          color: rgba(226, 232, 240, 0.80);
-          margin-top: 0.5rem;
-          text-shadow: 0 2px 14px rgba(0, 0, 0, 0.8);
-          display: block;
-        }
-
-        @media (max-width: 768px) {
-          .giant-title {
-            top: 17%;
-          }
-          .title-eyebrow {
-            font-size: 0.60rem;
-            letter-spacing: 0.26em;
-            margin-bottom: 0.4rem;
-          }
-          .title-hero {
-            font-size: clamp(1.8rem, 8vw, 2.8rem);
-            letter-spacing: 0.16em;
-          }
-          .title-sub {
-            font-size: 0.68rem;
-            letter-spacing: 0.24em;
-            margin-top: 0.35rem;
-          }
-        }
-
-        /* Foreground Bottom Subtitle & Action */
-        .bottom-content {
-          position: absolute;
-          bottom: 5.5%;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 5;
-          text-align: center;
-          max-width: 720px;
-          width: 90%;
-          opacity: 0;
-        }
-
-        .tagline {
-          font-family: 'Cormorant Garamond', serif;
-          font-size: clamp(0.95rem, 1.35vw, 1.20rem);
-          letter-spacing: 0.16em;
-          line-height: 1.5;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.88);
-          margin-bottom: 1.15rem;
-          font-weight: 400;
-          text-shadow: 0 2px 16px rgba(0, 0, 0, 0.95);
-        }
-
-        .discover-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.65rem;
-          padding: 0.70rem 2.8rem;
-          border: 1px solid rgba(255, 255, 255, 0.22);
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.08);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          color: #ffffff;
-          font-family: 'Inter', 'Montserrat', sans-serif;
-          font-size: 0.70rem;
-          letter-spacing: 0.28em;
-          text-transform: uppercase;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-        }
-
-        .discover-btn:hover {
-          background: rgba(255, 255, 255, 0.18);
-          border-color: rgba(255, 255, 255, 0.60);
-          color: #ffffff;
-          box-shadow: 0 0 24px rgba(255, 255, 255, 0.25), 0 8px 32px rgba(0, 0, 0, 0.7);
-          transform: translateY(-1px);
-        }
-
-        .discover-btn:active {
-          transform: translateY(0);
-        }
-      `}</style>
 
       {/* ========================================================
-          SLAB 1: FULLSCREEN HERO SCENE (Pinned 100vh Slab)
+          BACKGROUND: Train Video (/vid/train-ani.mp4)
       ======================================================== */}
-      <section
-        className={`hero-slab transition-opacity duration-500 ease-in-out ${
-          currentSlab === 'hero' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
-        }`}
+      <video
+        ref={videoRef}
+        src="/vid/train-ani.mp4"
+        playsInline
+        muted={soundEngine.isMuted}
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={handleTrainVideoEnded}
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${flowStep === 'train-transit' ? 'opacity-100 z-0' : 'opacity-0 pointer-events-none'
+          }`}
       >
-        {/* Native Video: Plays Once & Holds Final Frame */}
-        <video
-          ref={videoRef}
-          src="/vid/WhatsApp%20Video%202026-11-09%20at%205.26.53%20PM.mp4"
-          autoPlay
-          playsInline
-          muted={soundEngine.isMuted}
-          className="bg-video"
-          onTimeUpdate={handleVideoTimeUpdate}
-          onEnded={(e) => {
-            e.currentTarget.pause();
-            handleVideoEnded();
-          }}
-        >
-          <source src="/vid/WhatsApp%20Video%202026-11-09%20at%205.26.53%20PM.mp4" type="video/mp4" />
-          <source src="/vid/kutch_hero.mp4" type="video/mp4" />
-        </video>
+        <source src="/vid/train-ani.mp4" type="video/mp4" />
+      </video>
 
-        {/* Vignette Overlay for Text Legibility */}
-        <div className="vignette-overlay" />
+      {/* Ambient window vignette & tint for train transit */}
+      {flowStep === 'train-transit' && (
+        <div className="absolute inset-0 z-1 pointer-events-none bg-gradient-to-b from-black/55 via-transparent to-black/80" />
+      )}
 
-        {/* Top Navigation Bar */}
-        <nav ref={navRef} className="nav-bar">
-          <ul className="nav-links">
-            <li>
-              <button
-                onClick={handleReturn}
-                onMouseEnter={() => soundEngine.playHover()}
-              >
-                ← Return
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={goToDiorama}
-                onMouseEnter={() => soundEngine.playHover()}
-              >
-                Kutch
-              </button>
-            </li>
-          </ul>
+      {/* ========================================================
+          SLEEK MINIMALIST EDITORIAL TOP NAVIGATION
+          Header like train scene occurring on top of every section's intro:
+          - Winter train transit (train-transit)
+          - Monsoon intro (monsoon-intro)
+          - Savanna intro (vegetation-intro)
+          - Outro (outro-station)
+      ======================================================== */}
+      {(flowStep === 'train-transit' ||
+        flowStep === 'monsoon-intro' ||
+        flowStep === 'vegetation-intro') && (
+          <div
+            className={`fixed top-6 left-8 right-8 z-[60] flex items-center justify-between transition-opacity duration-700 select-none ${flowStep === 'train-transit' && trainTime < 1.0
+              ? 'opacity-0 pointer-events-none'
+              : 'opacity-100 pointer-events-auto'
+              }`}
+          >
 
-          <ul className="nav-links">
-            <li>
-              <button
-                onClick={goToDiorama}
-                onMouseEnter={() => soundEngine.playHover()}
-              >
-                3D Diorama
-              </button>
-            </li>
-            <li>
+            {/* Left: Previous Section & Orbit return actions */}
+            <div className="pointer-events-auto flex items-center gap-3">
               <button
                 onClick={() => {
-                  soundEngine.playModalOpen();
-                  onOpenCulture();
+                  try { soundEngine.playReturnSound(); } catch (e) { }
+                  if (flowStep === 'vegetation-nisar') navigateToStep('vegetation-intro');
+                  else if (flowStep === 'vegetation-intro') navigateToStep('monsoon-dance');
+                  else if (flowStep === 'monsoon-dance') navigateToStep('monsoon-data');
+                  else if (flowStep === 'monsoon-data') navigateToStep('monsoon-intro');
+                  else if (flowStep === 'monsoon-intro') navigateToStep('winter-nisar');
+                  else if (flowStep === 'winter-nisar') navigateToStep('train-transit');
+                  else onBackToOrbit();
                 }}
-                onMouseEnter={() => soundEngine.playHover()}
+                className="group flex items-center gap-1.5 text-[11px] font-mono tracking-[0.25em] text-stone-300 hover:text-amber-200 transition-colors cursor-pointer uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]"
+                title="Return to previous section"
               >
-                Culture
+                <span className="text-amber-300/90 group-hover:-translate-x-1 transition-transform font-bold">←</span>
+                <span>PREV</span>
               </button>
-            </li>
-          </ul>
-        </nav>
 
-        {/* Giant Title: Pure Editorial Typography Elevated in the Twilight Sky */}
-        <div ref={giantTitleRef} className="giant-title">
-          <div className="title-eyebrow">
-            <span className="title-eyebrow-line" />
-            <span>GUJARAT, INDIA • 23.83° N, 70.03° E</span>
-            <span className="title-eyebrow-line" />
+              <span className="text-stone-500 font-mono text-[10px]">|</span>
+
+              <button
+                onClick={() => {
+                  soundEngine.pauseRegionalOutroMusic();
+                  try { soundEngine.playReturnSound(); } catch (e) { }
+                  onBackToOrbit();
+                }}
+                className="text-[11px] font-mono tracking-[0.25em] text-stone-400 hover:text-amber-200 transition-colors cursor-pointer uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]"
+              >
+                <span>ORBIT</span>
+              </button>
+            </div>
+
+            {/* Center: Typographic Waypoint Storyboard (No pills, no heavy background) */}
+            <div className="hidden md:flex items-center gap-6 pointer-events-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+              {WAYPOINTS.map((wp) => {
+                const active = activeWaypointId === wp.id;
+
+                return (
+                  <button
+                    key={wp.id}
+                    onClick={() => navigateToStep(wp.id)}
+                    className={`relative py-1 text-[10px] font-mono tracking-[0.25em] transition-all cursor-pointer whitespace-nowrap uppercase ${active
+                      ? 'text-amber-200 font-bold'
+                      : 'text-stone-400/70 hover:text-stone-200'
+                      }`}
+                  >
+                    <span>{wp.label}</span>
+                    {active && (
+                      <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-300 to-transparent" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right: Expedition Branding */}
+            <div className="pointer-events-auto flex items-center gap-2 text-[10px] font-mono tracking-[0.3em] text-stone-400 uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80 animate-pulse" />
+              <span>KUTCH EXPRESS</span>
+            </div>
+
           </div>
-          <h1 className="title-hero">
-            GREAT RANN OF KUTCH
-          </h1>
-          <span className="title-sub">
-            THE BREATHING DESERT
-          </span>
-        </div>
+        )}
 
-        {/* Bottom Tagline & Action Button */}
-        <div ref={bottomContentRef} className="bottom-content">
-          <p className="tagline">
-            Where the salt desert meets infinite skies — immerse in the untamed stillness of Kutch.
-          </p>
-          <button 
-            onClick={goToDiorama} 
-            onMouseEnter={() => soundEngine.playHover()}
-            className="discover-btn group"
+      {/* ========================================================
+          FLOW STEP 01: TRAIN SCENE OVERLAY (/vid/train.mp4)
+          Smoothly dissolves as camera shifts into the bright window
+      ======================================================== */}
+      {flowStep === 'train-transit' && (
+        <div
+          onClick={handleTrainVideoEnded}
+          className="absolute inset-0 z-20 select-none cursor-pointer"
+          title="Click anywhere to skip train transit"
+        >
+          {/* Centered Presentation Stage: Shared dead-center coordinate space for sequential titles */}
+          <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-12 pointer-events-none">
+
+            {/* Title Block 1: DANCING WITH SARS (Cabin Intro - Original timing 0 to 2.5s, centered) */}
+            <div
+              className={`absolute max-w-4xl px-4 flex flex-col items-center justify-center text-center transition-all duration-1000 ${trainTime < 2.5
+                ? 'opacity-100 scale-100 translate-y-0'
+                : 'opacity-0 scale-95 -translate-y-4 pointer-events-none'
+                }`}
+            >
+              <div className="text-[11px] font-mono tracking-[0.45em] text-amber-300/90 uppercase mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span>CAR 01 &bull; OBSERVATION LOUNGE</span>
+              </div>
+              <h1 className="font-['Cinzel',serif] text-4xl sm:text-6xl md:text-7xl font-light tracking-[0.14em] text-[#faf7f2] uppercase mb-4 drop-shadow-[0_4px_30px_rgba(0,0,0,0.95)]">
+                DANCING WITH SARS
+              </h1>
+              <div className="text-[10px] sm:text-[11px] font-mono tracking-[0.35em] text-stone-300/90 uppercase font-light drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
+                THE SEASONAL WALTZ OF THE GREAT RANN OF KUTCH &bull; GUJARAT, INDIA
+              </div>
+            </div>
+
+            {/* Title Block 2: THE GHOST OCEAN (Season 01 Winter Intro - Smoothly dissolves in at 3.0s as Dancing with SARs finishes dissolving) */}
+            <div
+              className={`absolute max-w-4xl px-4 flex flex-col items-center justify-center text-center transition-all duration-1000 ${trainTime >= 3.0 && trainTime < 7.5
+                ? 'opacity-100 scale-100 translate-y-0'
+                : 'opacity-0 scale-95 -translate-y-4 pointer-events-none'
+                }`}
+            >
+              <div className="text-[11px] font-mono tracking-[0.45em] text-amber-300/90 uppercase mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                <span>SEASON 01 &bull; ARID SALT REGIME</span>
+              </div>
+              <h1 className="font-['Cinzel',serif] text-4xl sm:text-6xl md:text-7xl font-light tracking-[0.14em] text-[#faf7f2] uppercase mb-4 drop-shadow-[0_4px_30px_rgba(0,0,0,0.95)]">
+                THE GHOST OCEAN
+              </h1>
+              <div className="text-[10px] sm:text-[11px] font-mono tracking-[0.35em] text-stone-300/90 uppercase font-light drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
+                JANUARY &bull; 24CM MICROWAVES PIERCE THE DRY CRUST &bull; GREAT RANN OF KUTCH
+              </div>
+            </div>
+
+          </div>
+
+          {/* Minimalist discreet skip prompt pinned cleanly to bottom right */}
+          <div
+            className={`absolute bottom-6 right-6 sm:bottom-8 sm:right-10 transition-opacity duration-700 pointer-events-none ${trainTime >= 3.5 ? 'opacity-60 hover:opacity-100' : 'opacity-0'
+              }`}
           >
-            <span>Discover</span>
-            <span className="text-[10px] transform group-hover:translate-y-0.5 transition-transform duration-200">↓</span>
-          </button>
+            <span className="text-[10px] font-mono tracking-[0.25em] text-stone-300/80 uppercase drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
+              CLICK ANYWHERE TO SKIP &rarr;
+            </span>
+          </div>
         </div>
-      </section>
+      )}
 
       {/* ========================================================
-          SLAB 2: KUTCH 3D REALITY DIORAMA (Pinned 100vh Slab)
-          (Central Map with 5 Acts - Zero Halfway Scrolling!)
+          FLOW STEP 02: WINTER NISAR DATA (Season 01: Arid Salt & Subsurface Ocean)
+          Enters directly from the train window view of the white salt flats
       ======================================================== */}
-      <div
-        className={`absolute inset-0 w-full h-full transition-opacity duration-500 ease-in-out ${
-          currentSlab === 'diorama' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
-        }`}
-      >
-        <KutchRealityDioramaView
-          onGoToHero={goToHero}
-          onSelectAct={(actId) => {
-            if (actId === 'act-1') {
-              setActiveActView('act-1');
-            }
-          }}
-          onReturnToOrbit={handleReturn}
-        />
-      </div>
+      {flowStep === 'winter-nisar' && (
+        <div className="fixed inset-0 z-50 w-full h-full overflow-hidden bg-[#02050e]/80 backdrop-blur-2xl">
+          <NisarShowcaseView
+            season="winter"
+            onBackToDiorama={() => navigateToStep('train-transit')}
+            onContinueJourney={() => navigateToStep('monsoon-intro')}
+            onReturnToOrbit={onBackToOrbit}
+            isActive={true}
+          />
+        </div>
+      )}
 
       {/* ========================================================
-          CINEMATIC BLACK CROSS-FADE OVERLAY BETWEEN SLABS
+          FLOW STEP 03: MONSOON INTRO SCENE (/vid/monsoon-stat.mp4)
+          Cinematic video intro just like Winter and Savanna intros.
+          Typography centered behind/with the rain train scene.
+          Zero buttons, zero jargon. Simple and cinematic.
+      ======================================================== */}
+      {flowStep === 'monsoon-intro' && (
+        <div
+          onClick={() => navigateToStep('monsoon-data')}
+          className="fixed inset-0 z-50 w-full h-full overflow-hidden bg-black select-none cursor-pointer"
+          title="Click anywhere to skip intro"
+        >
+          <video
+            ref={monsoonVideoRef}
+            src="/vid/monsoon-stat.mp4"
+            autoPlay
+            playsInline
+            muted={soundEngine.isMuted}
+            onEnded={() => navigateToStep('monsoon-data')}
+            onTimeUpdate={() => {
+              const v = monsoonVideoRef.current;
+              if (v && v.duration && v.currentTime >= v.duration - 0.25) {
+                navigateToStep('monsoon-data');
+              }
+            }}
+            className="absolute inset-0 w-full h-full object-cover z-0"
+          >
+            <source src="/vid/monsoon-stat.mp4" type="video/mp4" />
+            <source src="/vid/monsoon_ride.mp4" type="video/mp4" />
+          </video>
+
+          {/* Atmospheric Cinematic Depth Vignette */}
+          <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-b from-black/55 via-transparent to-black/80" />
+
+          {/* Centered Typography Appearing Behind/Around the Train */}
+          <div className="absolute inset-0 z-20 flex items-center justify-center p-6 sm:p-12 pointer-events-none">
+            <div className="max-w-4xl px-4 flex flex-col items-center justify-center text-center animate-in fade-in duration-1000">
+              <div className="text-[11px] font-mono tracking-[0.45em] text-sky-300/90 uppercase mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+                <span>SEASON 02 &bull; MONSOON REGIME</span>
+              </div>
+              <h1 className="font-['Cinzel',serif] text-4xl sm:text-6xl md:text-7xl font-light tracking-[0.14em] text-[#faf7f2] uppercase mb-4 drop-shadow-[0_4px_30px_rgba(0,0,0,0.95)]">
+                THE VANISHING INLAND SEA
+              </h1>
+              <div className="text-[10px] sm:text-[11px] font-mono tracking-[0.35em] text-stone-300/90 uppercase font-light drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
+                AUGUST &bull; SEASONAL MONSOON INUNDATION &bull; GREAT RANN OF KUTCH
+              </div>
+            </div>
+          </div>
+
+          {/* Minimalist discreet skip prompt pinned cleanly to bottom right */}
+          <div className="absolute bottom-6 right-8 z-30 pointer-events-none opacity-60 hover:opacity-100 transition-opacity">
+            <span className="text-[10px] font-mono tracking-[0.25em] text-stone-300/80 uppercase drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
+              CLICK ANYWHERE TO SKIP &rarr;
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          FLOW STEP 04A: MONSOON RADAR DATA SHOWCASE (Data First)
+      ======================================================== */}
+      {flowStep === 'monsoon-data' && (
+        <div className="fixed inset-0 z-50 w-full h-full overflow-hidden bg-[#FAF8F5]">
+          <MonsoonFloodDataView
+            onBackToIntro={() => navigateToStep('monsoon-intro')}
+            onProceedToDance={() => navigateToStep('monsoon-dance')}
+            onReturnToOrbit={onBackToOrbit}
+          />
+        </div>
+      )}
+
+      {/* ========================================================
+          FLOW STEP 04B: THE SEASONAL DANCE OF SARS TIMELINE (Curved Arc)
+      ======================================================== */}
+      {(flowStep === 'monsoon-dance' || flowStep === 'monsoon-nisar') && (
+        <div className="fixed inset-0 z-50 w-full h-full overflow-hidden bg-[#FAF8F5]">
+          <SeasonalDanceTimelineView
+            onBackToIntro={() => navigateToStep('monsoon-data')}
+            onReturnToOrbit={onBackToOrbit}
+            onProceedToNext={() => navigateToStep('vegetation-intro')}
+          />
+        </div>
+      )}
+
+      {/* ========================================================
+          FLOW STEP 05: SAVANNA INTRO SCENE (/vid/Savana.mp4)
+          Cinematic video intro with typography behind/with the train,
+          automatically moving to vegetation data on video end.
+          Zero buttons, zero jargon. Simple as the Winter intro.
+      ======================================================== */}
+      {flowStep === 'vegetation-intro' && (
+        <div
+          onClick={() => navigateToStep('vegetation-nisar')}
+          className="fixed inset-0 z-50 w-full h-full overflow-hidden bg-black select-none cursor-pointer"
+          title="Click anywhere to skip intro"
+        >
+          <video
+            ref={savannaVideoRef}
+            src="/vid/Savana.mp4"
+            autoPlay
+            playsInline
+            muted={soundEngine.isMuted}
+            onEnded={() => navigateToStep('vegetation-nisar')}
+            onTimeUpdate={() => {
+              const v = savannaVideoRef.current;
+              if (v && v.duration && v.currentTime >= v.duration - 0.25) {
+                navigateToStep('vegetation-nisar');
+              }
+            }}
+            className="absolute inset-0 w-full h-full object-cover z-0"
+          >
+            <source src="/vid/Savana.mp4" type="video/mp4" />
+          </video>
+
+          {/* Atmospheric Cinematic Depth Vignette */}
+          <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-b from-black/50 via-transparent to-black/75" />
+
+          {/* Centered Typography Appearing Behind/Around the Train */}
+          <div className="absolute inset-0 z-20 flex items-center justify-center p-6 sm:p-12 pointer-events-none">
+            <div className="max-w-4xl px-4 flex flex-col items-center justify-center text-center animate-in fade-in duration-1000">
+              <div className="text-[11px] font-mono tracking-[0.45em] text-emerald-300/90 uppercase mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>SEASON 03 &bull; POST-MONSOON SAVANNA</span>
+              </div>
+              <h1 className="font-['Cinzel',serif] text-4xl sm:text-6xl md:text-7xl font-light tracking-[0.14em] text-[#faf7f2] uppercase mb-4 drop-shadow-[0_4px_30px_rgba(0,0,0,0.95)]">
+                THE SAVANNA THAT BLOOMS FROM MUD
+              </h1>
+              <div className="text-[10px] sm:text-[11px] font-mono tracking-[0.35em] text-stone-300/90 uppercase font-light drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
+                OCTOBER &bull; 2,500 KM² BANNI TROPICAL SAVANNA &bull; GUJARAT, INDIA
+              </div>
+            </div>
+          </div>
+
+          {/* Minimalist discreet skip prompt pinned cleanly to bottom right */}
+          <div className="absolute bottom-6 right-8 z-30 pointer-events-none opacity-60 hover:opacity-100 transition-opacity">
+            <span className="text-[10px] font-mono tracking-[0.25em] text-stone-300/80 uppercase drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
+              CLICK ANYWHERE TO SKIP &rarr;
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          FLOW STEP 06: VEGETATION DATA + LIVING ENCYCLOPEDIA (Canopy Slicer & Savanna Sync)
+      ======================================================== */}
+      {flowStep === 'vegetation-nisar' && (
+        <div className="fixed inset-0 z-50 w-full h-full overflow-hidden bg-[#02050e]/80 backdrop-blur-2xl">
+          <NisarShowcaseView
+            season="greenery"
+            onBackToDiorama={() => navigateToStep('vegetation-intro')}
+            onContinueJourney={() => navigateToStep('outro-station')}
+            onReturnToOrbit={onBackToOrbit}
+            isActive={true}
+          />
+        </div>
+      )}
+
+      {/* ========================================================
+          FLOW STEP 07: ECOLOGICAL REFLECTION SCENE
+          "Is this sync between nature and biological life changing?"
+      ======================================================== */}
+      {flowStep === 'sync-reflection' && (
+        <div className="fixed inset-0 z-50 w-full h-full overflow-y-auto overflow-x-hidden bg-[#020409]">
+          <ClimateSyncReflectionScene
+            onProceedToOutro={() => navigateToStep('outro-station')}
+            onBackToVegetation={() => navigateToStep('vegetation-nisar')}
+          />
+        </div>
+      )}
+
+      {/* ========================================================
+          FLOW STEP 08: END VIDEO / OUTRO & REGIONAL FOLK MUSIC
+      ======================================================== */}
+      {flowStep === 'outro-station' && (
+        <div className="fixed inset-0 z-50 overflow-hidden bg-black">
+          <OutroStationView
+            onReturnToOrbit={onBackToOrbit}
+            onRestartJourney={() => navigateToStep('train-transit')}
+            onBackToPrevious={() => navigateToStep('vegetation-nisar')}
+          />
+        </div>
+      )}
+
+      {/* ========================================================
+          CINEMATIC BLACK CROSS-FADE TRANSITION OVERLAY
       ======================================================== */}
       <div
-        className="fixed inset-0 z-40 bg-[#030508] pointer-events-none transition-opacity duration-600 ease-in-out"
+        className="fixed inset-0 z-50 bg-[#02050e] pointer-events-none transition-opacity duration-300 ease-in-out"
         style={{
           opacity: isSlabTransitioning ? 1 : 0,
           visibility: isSlabTransitioning ? 'visible' : 'hidden'
         }}
       />
 
-      {/* ========================================================
-          DEDICATED SEPARATE PAGE FOR ACT 1 (SILENCE)
-          (Contains Act-1 Hero Video + Radar Showcase just below it)
-      ======================================================== */}
-      {activeActView === 'act-1' && (
-        <div className="fixed inset-0 z-50 w-screen h-screen">
-          <KutchAct1View
-            onBackToDiorama={() => setActiveActView(null)}
-            onReturnToOrbit={handleReturn}
-          />
-        </div>
-      )}
     </div>
   );
 }

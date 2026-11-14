@@ -28,8 +28,8 @@ const TERRAIN_ZONES = [
       { label: 'L-BAND BACKSCATTER', val: '-18.4 dB (HH)' },
       { label: 'S-BAND BACKSCATTER', val: '-12.1 dB (VV)' },
       { label: 'InSAR COHERENCE', val: '0.94 (HIGH)' },
-      { label: 'CRUST DIELECTRIC', val: '3.2 εr (NACL)' },
-      { label: 'SUB-SURFACE BRINE', val: '0.38M DEPTH' },
+      { label: 'CRUST DIELECTRIC', val: "ε' ≈ 5.9 (HALITE)" },
+      { label: 'DIELECTRIC BOUNDARY', val: 'σ > 5 S/m BRINE' },
       { label: 'SURFACE DEFORMATION', val: '< 0.8 MM/YR' }
     ]
   },
@@ -71,7 +71,7 @@ const TERRAIN_ZONES = [
     title: 'Act III: Halite Crystallization',
     subtitle: 'AGARIYA SALT EVAPORATION MATRIX',
     tagline: 'SOLAR BRINE DIELECTRIC EVAPORATION GRADIENTS',
-    desc: 'NISAR captures the dielectric permittivity transition as saturated brine crystallizes into solid halite salt in the Agariya pans. Dielectric constant drops from 45.2 εr (brine) to 3.2 εr (salt crust), revealing evaporation rates from space.',
+    desc: 'NISAR captures the dielectric transition as conductive brine crystallizes into solid halite salt in the Agariya pans. Permittivity shifts from conductive liquid (σ > 5 S/m) to dry crystalline halite (real permittivity ε′ ≈ 5.9, low loss tan δ < 10⁻⁴), revealing crystallization from orbit.',
     nodePos: { x: 46.5, y: 46.5 },
     regionCode: 'SALT-CRUSTING',
     region: { cx: 46.5, cy: 46.5, rx: 6.5, ry: 14, rotate: 0 },
@@ -85,7 +85,7 @@ const TERRAIN_ZONES = [
     },
     nisarMode: 'DIELECTRIC PERMITTIVITY',
     metrics: [
-      { label: 'BRINE DIELECTRIC', val: '45.2 -> 3.2 εr' },
+      { label: 'DIELECTRIC TRANSITION', val: "σ>5 S/m -> ε'≈5.9" },
       { label: 'CRUST ACCRETION', val: '1.4 CM/WK' },
       { label: 'S-BAND PHASE SHIFT', val: '38.6 DEG' },
       { label: 'SURFACE ROUGHNESS', val: '0.6 CM' },
@@ -115,12 +115,12 @@ const TERRAIN_ZONES = [
     },
     nisarMode: 'PolSAR BIOMASS & SOIL MOISTURE',
     metrics: [
-      { label: 'VOLUME SCATTERING', val: '-14.2 dB (HV)' },
-      { label: 'SOIL MOISTURE', val: '34.8% VOL' },
+      { label: 'VOLUME SCATTERING', val: '-21.0 dB (HV)' },
+      { label: 'L-BAND WAVELENGTH', val: '24.0 CM' },
       { label: 'HABITAT EXTENT', val: '120 SQ KM' },
       { label: 'POLSAR ENTROPY', val: '0.72 H' },
-      { label: 'BIOMASS DENSITY', val: '18.5 T/HA' },
-      { label: 'RESOLUTION', val: '3M x 10M' }
+      { label: 'BIOMASS SENSITIVITY', val: '< 60 MG/HA' },
+      { label: 'RESOLUTION', val: '20M GCOV' }
     ]
   },
   {
@@ -161,7 +161,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
   const [mouseTilt, setMouseTilt] = useState({ x: 0, y: 0 });
   const [isHoveringIsland, setIsHoveringIsland] = useState(false);
   const [activeSarBand, setActiveSarBand] = useState('L-BAND'); // 'L-BAND' | 'S-BAND' | 'InSAR'
-  
+
   // Element references for live sub-pixel vector line anchoring
   const stageRef = useRef(null);
   const nodeRefs = useRef([]);
@@ -472,9 +472,8 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
       {/* ========================================================
           1. TOP ARCHITECTURAL HEADER & NISAR RADAR TELEMETRY
       ======================================================== */}
-      <header className={`relative z-20 flex flex-wrap items-start justify-between gap-4 pt-1 pb-4 border-b border-white/10 transition-all duration-700 ${
-        hasEnteredView ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
-      }`}>
+      <header className={`relative z-20 flex flex-wrap items-start justify-between gap-4 pt-1 pb-4 border-b border-white/10 transition-all duration-700 ${hasEnteredView ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+        }`}>
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
@@ -594,9 +593,8 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
         )}
 
         {/* Left Flank: Technical Index (5 Acts Sequential List) */}
-        <div className={`hidden md:flex flex-col space-y-2 z-20 w-56 transition-all duration-700 delay-200 shrink-0 ${
-          hasEnteredView ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'
-        }`}>
+        <div className={`hidden md:flex flex-col space-y-2 z-20 w-56 transition-all duration-700 delay-200 shrink-0 ${hasEnteredView ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'
+          }`}>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-1.5 h-1.5 bg-cyan-400" />
             <span className="font-mono text-[9px] uppercase tracking-[0.26em] text-white/50">
@@ -611,11 +609,10 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                 key={zone.id}
                 onClick={() => selectZone(idx)}
                 onMouseEnter={() => soundEngine.playHover()}
-                className={`group flex items-center justify-between p-2.5 rounded-lg border text-left transition-all duration-200 cursor-pointer ${
-                  isSelected
+                className={`group flex items-center justify-between p-2.5 rounded-lg border text-left transition-all duration-200 cursor-pointer ${isSelected
                     ? 'bg-cyan-950/40 border-cyan-400/60 text-white shadow-lg translate-x-1'
                     : 'bg-white/[0.02] border-white/8 text-white/55 hover:text-white hover:border-white/25 hover:bg-white/[0.05]'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2.5 truncate">
                   <span className={`font-mono text-[9px] font-bold ${isSelected ? 'text-cyan-300' : 'text-white/40'}`}>
@@ -635,7 +632,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
 
         {/* Center Canvas: Floating 5-Acts Diorama Map with Regional Highlighting */}
         <div className="relative flex-1 w-full flex items-center justify-center min-h-[460px] sm:min-h-[560px] lg:min-h-[620px] px-2 sm:px-4">
-          
+
           {/* Celestial Ambient Backlight Aura (Illuminates the Island Silhouettes & Relief) */}
           <div className="absolute w-[92%] max-w-[1020px] h-[82%] -top-4 rounded-full bg-radial from-white/[0.09] via-cyan-400/[0.035] to-transparent blur-3xl pointer-events-none" />
 
@@ -651,14 +648,13 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
             onMouseEnter={() => setIsHoveringIsland(true)}
             onMouseLeave={() => setIsHoveringIsland(false)}
           >
-            <div className={`sx-island-hover-float relative w-full h-full flex items-center justify-center transition-all duration-1000 ${
-              hasEnteredView ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-6'
-            }`}>
-              
+            <div className={`sx-island-hover-float relative w-full h-full flex items-center justify-center transition-all duration-1000 ${hasEnteredView ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-6'
+              }`}>
+
               {/* High-Resolution 5-Acts Diorama Map */}
               {hasEnteredView && (
                 <img
-                  src="/assets/kutch_5acts_diorama.webp"
+                  src="/assets/layers/act3_october_nisar.webp"
                   alt="Great Rann of Kutch 5-Acts Stratum Diorama"
                   className="w-full h-full object-contain filter drop-shadow-[0_28px_56px_rgba(0,0,0,0.92)] drop-shadow-[0_0_35px_rgba(255,255,255,0.08)] contrast-[1.08] brightness-[1.06] pointer-events-none transition-all duration-500"
                   loading="lazy"
@@ -671,7 +667,7 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
               ======================================================== */}
               {hasEnteredView && activeZone && (
                 <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                  
+
                   {/* Layer 1: Luminous Topographic Biome Glow */}
                   <div
                     key={`glow-${activeZone.id}`}
@@ -746,28 +742,24 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                     className="absolute transform -translate-x-1/2 -translate-y-1/2 z-30 cursor-pointer group"
                   >
                     {/* Pulsing Radar Ring when active */}
-                    <span className={`absolute inset-0 w-8 h-8 -m-2 rounded-full border border-white/80 sx-pulse-ring pointer-events-none ${
-                      isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'
-                    }`} />
+                    <span className={`absolute inset-0 w-8 h-8 -m-2 rounded-full border border-white/80 sx-pulse-ring pointer-events-none ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'
+                      }`} />
 
                     {/* Precision Square Reticle with Center Dot */}
-                    <div className={`relative flex items-center justify-center transition-all duration-300 ${
-                      isSelected
+                    <div className={`relative flex items-center justify-center transition-all duration-300 ${isSelected
                         ? 'w-4 h-4 border border-white bg-white/20 shadow-[0_0_16px_rgba(255,255,255,0.95)]'
                         : 'w-2.5 h-2.5 border border-white/50 bg-black/80 group-hover:border-white group-hover:scale-115'
-                    }`}>
+                      }`}>
                       <div className={`w-1.5 h-1.5 ${isSelected ? 'bg-white' : 'bg-white/70 group-hover:bg-white'}`} />
                     </div>
 
                     {/* Architectural Micro-Annotation Tag */}
-                    <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-1.5 flex flex-col items-center pointer-events-none transition-all duration-300 ${
-                      isSelected ? 'opacity-100 scale-100' : 'opacity-55 group-hover:opacity-100 group-hover:scale-105'
-                    }`}>
-                      <span className={`px-1.5 py-0.5 rounded font-mono text-[7.5px] tracking-widest uppercase border whitespace-nowrap ${
-                        isSelected
+                    <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-1.5 flex flex-col items-center pointer-events-none transition-all duration-300 ${isSelected ? 'opacity-100 scale-100' : 'opacity-55 group-hover:opacity-100 group-hover:scale-105'
+                      }`}>
+                      <span className={`px-1.5 py-0.5 rounded font-mono text-[7.5px] tracking-widest uppercase border whitespace-nowrap ${isSelected
                           ? 'bg-white text-black font-bold border-white shadow-md'
                           : 'bg-black/85 text-white/70 border-white/15'
-                      }`}>
+                        }`}>
                         {zone.actRoman} // {zone.title.replace(/^Act [I|V|X]+: /, '').split(' ')[0]}
                       </span>
                     </div>
@@ -779,11 +771,10 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
         </div>
 
         {/* Right Flank: Dedicated NASA-ISRO NISAR Radar Science Inspector Panel */}
-        <div className={`z-20 w-full lg:w-88 max-w-sm transition-all duration-700 delay-300 shrink-0 ${
-          hasEnteredView ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-6'
-        }`}>
+        <div className={`z-20 w-full lg:w-88 max-w-sm transition-all duration-700 delay-300 shrink-0 ${hasEnteredView ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-6'
+          }`}>
           <div className="sx-hud-glass p-5 rounded-xl border border-white/20 relative">
-            
+
             {/* Dedicated Architectural Connector Port on Left Border (Where line docks!) */}
             <div
               ref={cardPortRef}
@@ -834,11 +825,10 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                     soundEngine.playClick();
                     setActiveSarBand(band);
                   }}
-                  className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
-                    activeSarBand === band
+                  className={`px-2 py-0.5 rounded transition-all cursor-pointer ${activeSarBand === band
                       ? 'bg-cyan-400 text-black font-bold shadow'
                       : 'bg-white/[0.04] text-white/50 border border-white/10 hover:text-white'
-                  }`}
+                    }`}
                 >
                   {band}
                 </button>
@@ -880,10 +870,9 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
           3. BOTTOM CONTROLS & ACT SELECTOR CHIPS
           (Generous pl-32 padding ensures ZERO overlap with fixed Sound Control)
       ======================================================== */}
-      <footer className={`relative z-20 flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-white/10 transition-all duration-700 delay-400 pl-2 sm:pl-32 md:pl-36 ${
-        hasEnteredView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-      }`}>
-        
+      <footer className={`relative z-20 flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-white/10 transition-all duration-700 delay-400 pl-2 sm:pl-32 md:pl-36 ${hasEnteredView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}>
+
         {/* Center/Left: Act Filter Chips */}
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/40 mr-1 hidden sm:inline">
@@ -896,11 +885,10 @@ export default function KutchInteractiveMap({ onReturnToOrbit }) {
                 key={zone.id}
                 onClick={() => selectZone(idx)}
                 onMouseEnter={() => soundEngine.playHover()}
-                className={`px-3 py-1 rounded-full font-mono text-[9px] tracking-wider uppercase transition-all cursor-pointer ${
-                  isSelected
+                className={`px-3 py-1 rounded-full font-mono text-[9px] tracking-wider uppercase transition-all cursor-pointer ${isSelected
                     ? 'bg-cyan-400 text-black font-semibold shadow-lg scale-105'
                     : 'bg-white/[0.05] border border-white/10 text-white/60 hover:text-white hover:border-white/30'
-                }`}
+                  }`}
               >
                 {zone.actRoman} // {zone.title.replace(/^Act [I|V|X]+: /, '').split(' ')[0]}
               </button>

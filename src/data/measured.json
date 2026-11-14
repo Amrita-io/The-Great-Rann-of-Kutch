@@ -1,0 +1,551 @@
+{
+  "metadata": {
+    "sensor": "NASA-ISRO NISAR LSAR (24 cm L-Band, 1.25 GHz)",
+    "track": 63,
+    "frame": 76,
+    "repeat_cycle_days": 12,
+    "pixel_spacing_m": 20.0,
+    "pixel_area_km2": 0.0004,
+    "water_threshold_db": -20.0,
+    "nesz_noise_floor_db": -23.0,
+    "study_basin": {
+      "name": "Great Rann of Kutch Basin Window",
+      "utm_zone": "42N",
+      "x_range_m": [
+        540000.0,
+        700000.0
+      ],
+      "y_range_m": [
+        2640000.0,
+        2800000.0
+      ],
+      "total_box_area_km2": 25600.0
+    }
+  },
+  "passes": {
+    "Cycle 025 (Jul 12)": {
+      "granule_id": "NISAR_L2_PR_GCOV_025_063_D_076_2005_DHDH_M_20260712T135737_20260712T135812_P05023_N_F_J_001",
+      "processed_date": "2026-07-19T11:04:00",
+      "dark_water_km2": 5563.4,
+      "valid_data_fraction": 0.9245,
+      "gap_fraction": 0.0755,
+      "water_threshold_db": -20.0
+    },
+    "Cycle 026 (Jul 24)": {
+      "granule_id": "NISAR_L2_PR_GCOV_026_063_D_076_4005_DHDH_A_20260724T135736_20260724T135811_P05023_N_F_J_001",
+      "processed_date": "2026-07-26T22:21:43",
+      "dark_water_km2": 15636.4,
+      "valid_data_fraction": 0.998,
+      "gap_fraction": 0.002,
+      "water_threshold_db": -20.0
+    },
+    "Cycle 028 (Aug 17)": {
+      "granule_id": "NISAR_L2_PR_GCOV_028_063_D_076_4005_DHDH_A_20260817T135735_20260817T135810_P05023_N_F_J_001",
+      "processed_date": "2026-08-22T16:07:02",
+      "dark_water_km2": 20513.7,
+      "valid_data_fraction": 0.9981,
+      "gap_fraction": 0.0019,
+      "water_threshold_db": -20.0
+    },
+    "Cycle 029 (Aug 29)": {
+      "granule_id": "NISAR_L2_PR_GCOV_029_063_D_076_2005_QPDH_A_20260829T135735_20260829T135809_P05023_N_F_J_001",
+      "processed_date": "2026-08-31T14:34:05",
+      "dark_water_km2": 2984.2,
+      "valid_data_fraction": 0.8538,
+      "gap_fraction": 0.1462,
+      "water_threshold_db": -20.0
+    },
+    "Cycle 030 (Sep 10)": {
+      "granule_id": "NISAR_L2_PR_GCOV_030_063_D_076_2005_DHDH_M_20260910T135735_20260910T135809_P05023_N_F_J_001",
+      "processed_date": "2026-09-13T12:52:54",
+      "dark_water_km2": 5383.0,
+      "valid_data_fraction": 0.9257,
+      "gap_fraction": 0.0743,
+      "water_threshold_db": -20.0
+    },
+    "Cycle 031 (Sep 22)": {
+      "granule_id": "NISAR_L2_PR_GCOV_031_063_D_076_2005_QPDH_A_20260922T135735_20260922T135809_P05023_N_F_J_001",
+      "processed_date": "2026-09-24T19:19:07",
+      "dark_water_km2": 4387.8,
+      "valid_data_fraction": 0.8543,
+      "gap_fraction": 0.1457,
+      "water_threshold_db": -20.0
+    },
+    "Cycle 032 (Oct 04)": {
+      "granule_id": "NISAR_L2_PR_GCOV_032_063_D_076_2005_DHDH_M_20261004T135735_20261004T135809_P05023_N_F_J_001",
+      "processed_date": "2026-10-06T11:02:15",
+      "dark_water_km2": 4412.9,
+      "valid_data_fraction": 0.9233,
+      "gap_fraction": 0.0767,
+      "water_threshold_db": -20.0
+    },
+    "Cycle 033 (Oct 16)": {
+      "granule_id": "NISAR_L2_PR_GCOV_033_063_D_076_2005_DHDH_M_20261016T135735_20261016T135809_P05023_N_F_J_001",
+      "processed_date": "2026-10-18T09:18:38",
+      "dark_water_km2": 4372.8,
+      "valid_data_fraction": 0.9157,
+      "gap_fraction": 0.0843,
+      "water_threshold_db": -20.0
+    },
+    "Cycle 034 (Oct 28)": {
+      "granule_id": "NISAR_L2_PR_GCOV_034_063_D_076_4005_DHDH_A_20261028T135735_20261028T135810_P05036_N_F_J_001",
+      "processed_date": "2026-11-09T12:22:36",
+      "dark_water_km2": 25857.9,
+      "valid_data_fraction": 0.9951,
+      "gap_fraction": 0.0049,
+      "water_threshold_db": -20.0
+    }
+  },
+  "pins": {
+    "allah_bund": {
+      "name": "1819 Allah Bund Scarp",
+      "lat": 24.25,
+      "lon": 69.8,
+      "utm_x": 581212.7,
+      "utm_y": 2682138.3,
+      "time_series": {
+        "Cycle 025 (Jul 12)": {
+          "pixel_coords": [
+            11260,
+            4976
+          ],
+          "mean_hh_db": -16.56,
+          "mean_hv_db": -24.9,
+          "near_noise_floor": true
+        },
+        "Cycle 026 (Jul 24)": {
+          "pixel_coords": [
+            22521,
+            9952
+          ],
+          "mean_hh_db": -13.99,
+          "mean_hv_db": -21.77,
+          "near_noise_floor": false
+        },
+        "Cycle 028 (Aug 17)": {
+          "pixel_coords": [
+            22521,
+            9952
+          ],
+          "mean_hh_db": -15.15,
+          "mean_hv_db": -24.38,
+          "near_noise_floor": true
+        },
+        "Cycle 029 (Aug 29)": {
+          "pixel_coords": [
+            11260,
+            4976
+          ],
+          "mean_hh_db": -14.74,
+          "mean_hv_db": -23.99,
+          "near_noise_floor": true
+        },
+        "Cycle 030 (Sep 10)": {
+          "pixel_coords": [
+            11260,
+            4976
+          ],
+          "mean_hh_db": -16.23,
+          "mean_hv_db": -25.24,
+          "near_noise_floor": true
+        },
+        "Cycle 031 (Sep 22)": {
+          "pixel_coords": [
+            11260,
+            4976
+          ],
+          "mean_hh_db": -12.81,
+          "mean_hv_db": -23.74,
+          "near_noise_floor": true
+        },
+        "Cycle 032 (Oct 04)": {
+          "pixel_coords": [
+            11260,
+            4976
+          ],
+          "mean_hh_db": -15.19,
+          "mean_hv_db": -24.35,
+          "near_noise_floor": true
+        },
+        "Cycle 033 (Oct 16)": {
+          "pixel_coords": [
+            11260,
+            4976
+          ],
+          "mean_hh_db": -14.95,
+          "mean_hv_db": -25.47,
+          "near_noise_floor": true
+        },
+        "Cycle 034 (Oct 28)": {
+          "pixel_coords": [
+            22521,
+            9952
+          ],
+          "mean_hh_db": -14.65,
+          "mean_hv_db": -24.78,
+          "near_noise_floor": true
+        }
+      }
+    },
+    "core_basin": {
+      "name": "Core Fossil Basin",
+      "lat": 24.05,
+      "lon": 70.1,
+      "utm_x": 611843.5,
+      "utm_y": 2660199.8,
+      "time_series": {
+        "Cycle 025 (Jul 12)": {
+          "pixel_coords": [
+            12357,
+            6507
+          ],
+          "mean_hh_db": -25.73,
+          "mean_hv_db": -27.42,
+          "near_noise_floor": true
+        },
+        "Cycle 026 (Jul 24)": {
+          "pixel_coords": [
+            24715,
+            13015
+          ],
+          "mean_hh_db": -24.8,
+          "mean_hv_db": -27.23,
+          "near_noise_floor": true
+        },
+        "Cycle 028 (Aug 17)": {
+          "pixel_coords": [
+            24715,
+            13015
+          ],
+          "mean_hh_db": -17.56,
+          "mean_hv_db": -24.1,
+          "near_noise_floor": true
+        },
+        "Cycle 029 (Aug 29)": {
+          "pixel_coords": [
+            12357,
+            6507
+          ],
+          "mean_hh_db": -18.24,
+          "mean_hv_db": -24.79,
+          "near_noise_floor": true
+        },
+        "Cycle 030 (Sep 10)": {
+          "pixel_coords": [
+            12357,
+            6507
+          ],
+          "mean_hh_db": -26.32,
+          "mean_hv_db": -26.87,
+          "near_noise_floor": true
+        },
+        "Cycle 031 (Sep 22)": {
+          "pixel_coords": [
+            12357,
+            6507
+          ],
+          "mean_hh_db": -16.76,
+          "mean_hv_db": -25.03,
+          "near_noise_floor": true
+        },
+        "Cycle 032 (Oct 04)": {
+          "pixel_coords": [
+            12357,
+            6507
+          ],
+          "mean_hh_db": -19.18,
+          "mean_hv_db": -25.39,
+          "near_noise_floor": true
+        },
+        "Cycle 033 (Oct 16)": {
+          "pixel_coords": [
+            12357,
+            6507
+          ],
+          "mean_hh_db": -19.29,
+          "mean_hv_db": -26.65,
+          "near_noise_floor": true
+        },
+        "Cycle 034 (Oct 28)": {
+          "pixel_coords": [
+            24715,
+            13015
+          ],
+          "mean_hh_db": -20.23,
+          "mean_hv_db": -26.47,
+          "near_noise_floor": true
+        }
+      }
+    },
+    "khadir_island": {
+      "name": "Khadir Island / Flamingo City",
+      "lat": 24.1,
+      "lon": 70.4,
+      "utm_x": 642294.8,
+      "utm_y": 2666008.0,
+      "time_series": {
+        "Cycle 025 (Jul 12)": {
+          "pixel_coords": [
+            12067,
+            8030
+          ],
+          "mean_hh_db": -19.86,
+          "mean_hv_db": -14.18,
+          "near_noise_floor": false
+        },
+        "Cycle 026 (Jul 24)": {
+          "pixel_coords": [
+            24134,
+            16060
+          ],
+          "mean_hh_db": -16.77,
+          "mean_hv_db": -24.46,
+          "near_noise_floor": true
+        },
+        "Cycle 028 (Aug 17)": {
+          "pixel_coords": [
+            24134,
+            16060
+          ],
+          "mean_hh_db": -23.67,
+          "mean_hv_db": -24.81,
+          "near_noise_floor": true
+        },
+        "Cycle 029 (Aug 29)": {
+          "pixel_coords": [
+            12067,
+            8030
+          ],
+          "mean_hh_db": -18.59,
+          "mean_hv_db": -12.67,
+          "near_noise_floor": false
+        },
+        "Cycle 030 (Sep 10)": {
+          "pixel_coords": [
+            12067,
+            8030
+          ],
+          "mean_hh_db": -25.82,
+          "mean_hv_db": -25.85,
+          "near_noise_floor": true
+        },
+        "Cycle 031 (Sep 22)": {
+          "pixel_coords": [
+            12067,
+            8030
+          ],
+          "mean_hh_db": -23.96,
+          "mean_hv_db": -13.34,
+          "near_noise_floor": false
+        },
+        "Cycle 032 (Oct 04)": {
+          "pixel_coords": [
+            12067,
+            8030
+          ],
+          "mean_hh_db": -25.51,
+          "mean_hv_db": -25.47,
+          "near_noise_floor": true
+        },
+        "Cycle 033 (Oct 16)": {
+          "pixel_coords": [
+            12067,
+            8030
+          ],
+          "mean_hh_db": -24.16,
+          "mean_hv_db": -14.83,
+          "near_noise_floor": false
+        },
+        "Cycle 034 (Oct 28)": {
+          "pixel_coords": [
+            24134,
+            16060
+          ],
+          "mean_hh_db": -19.64,
+          "mean_hv_db": -25.51,
+          "near_noise_floor": true
+        }
+      }
+    },
+    "kori_creek": {
+      "name": "Kori Creek Tidal Ingress",
+      "lat": 23.85,
+      "lon": 69.65,
+      "utm_x": 566189.6,
+      "utm_y": 2637771.4,
+      "time_series": {
+        "Cycle 025 (Jul 12)": {
+          "pixel_coords": [
+            13478,
+            4224
+          ],
+          "mean_hh_db": -21.44,
+          "mean_hv_db": -26.47,
+          "near_noise_floor": true
+        },
+        "Cycle 026 (Jul 24)": {
+          "pixel_coords": [
+            26958,
+            8450
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 028 (Aug 17)": {
+          "pixel_coords": [
+            26958,
+            8450
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 029 (Aug 29)": {
+          "pixel_coords": [
+            13478,
+            4224
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 030 (Sep 10)": {
+          "pixel_coords": [
+            13478,
+            4224
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 031 (Sep 22)": {
+          "pixel_coords": [
+            13478,
+            4224
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 032 (Oct 04)": {
+          "pixel_coords": [
+            13478,
+            4224
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 033 (Oct 16)": {
+          "pixel_coords": [
+            13478,
+            4224
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 034 (Oct 28)": {
+          "pixel_coords": [
+            26958,
+            8450
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        }
+      }
+    },
+    "banni_grassland": {
+      "name": "Banni Savanna Commons",
+      "lat": 23.65,
+      "lon": 69.5,
+      "utm_x": 550992.6,
+      "utm_y": 2615566.8,
+      "time_series": {
+        "Cycle 025 (Jul 12)": {
+          "pixel_coords": [
+            14589,
+            3465
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 026 (Jul 24)": {
+          "pixel_coords": [
+            29178,
+            6930
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 028 (Aug 17)": {
+          "pixel_coords": [
+            29178,
+            6930
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 029 (Aug 29)": {
+          "pixel_coords": [
+            14589,
+            3465
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 030 (Sep 10)": {
+          "pixel_coords": [
+            14589,
+            3465
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 031 (Sep 22)": {
+          "pixel_coords": [
+            14589,
+            3465
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 032 (Oct 04)": {
+          "pixel_coords": [
+            14589,
+            3465
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 033 (Oct 16)": {
+          "pixel_coords": [
+            14589,
+            3465
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        },
+        "Cycle 034 (Oct 28)": {
+          "pixel_coords": [
+            29178,
+            6930
+          ],
+          "mean_hh_db": null,
+          "mean_hv_db": null,
+          "near_noise_floor": false
+        }
+      }
+    }
+  }
+}

@@ -28,6 +28,7 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
   const waveMesh2Ref = useRef(null);
   const waveMat2Ref = useRef(null);
   const animFrameIdRef = useRef(null);
+  const titleOverlayRef = useRef(null);
 
   // Capture initial return state on mount to avoid re-triggering WebGL canvas teardown
   const isReturningInitial = useRef(isReturning).current;
@@ -49,6 +50,11 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
   const targetRotationRef = useRef({ x: KUTCH_ROT_X, y: KUTCH_ROT_Y });
   const currentRotationRef = useRef({ x: KUTCH_ROT_X, y: KUTCH_ROT_Y });
   const isAutoRotatingRef = useRef(true);
+  const isTransitioningRef = useRef(isTransitioning);
+
+  useEffect(() => {
+    isTransitioningRef.current = isTransitioning;
+  }, [isTransitioning]);
 
   // 2D screen coordinate locked onto Kutch beacon
   const [pinScreenPos, setPinScreenPos] = useState({ x: 0, y: 0, visible: false });
@@ -56,6 +62,9 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
   const featuredDest = DESTINATIONS[0]; // Great Rann of Kutch
 
   useEffect(() => {
+    soundEngine.setMode('globe');
+    soundEngine.playOrbitMusic(0.25);
+
     const container = mountRef.current;
     if (!container) return;
 
@@ -679,8 +688,8 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
       const delta = clock.getDelta();
       const elapsed = clock.getElapsedTime();
 
-      // Slow, tranquil, natural orbital rotation of Earth
-      if (isAutoRotatingRef.current && !isDraggingRef.current && !isTransitioning) {
+      // Slow, tranquil, natural orbital rotation of Earth (Strictly disabled during active transitions)
+      if (isAutoRotatingRef.current && !isDraggingRef.current && !isTransitioningRef.current && !isStoryStarting) {
         targetRotationRef.current.y += 0.00035;
       }
 
@@ -704,12 +713,15 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
       }
 
       // Smooth damping (Earth remains strictly upright, rotX stays at 0)
-      currentRotationRef.current.x += (targetRotationRef.current.x - currentRotationRef.current.x) * 0.06;
-      currentRotationRef.current.y += (targetRotationRef.current.y - currentRotationRef.current.y) * 0.06;
+      // When transitioning, GSAP has 100% authoritative direct control, so do not apply lerp lag!
+      if (!isTransitioningRef.current) {
+        currentRotationRef.current.x += (targetRotationRef.current.x - currentRotationRef.current.x) * 0.06;
+        currentRotationRef.current.y += (targetRotationRef.current.y - currentRotationRef.current.y) * 0.06;
 
-      if (earthGroupRef.current) {
-        earthGroupRef.current.rotation.x = currentRotationRef.current.x;
-        earthGroupRef.current.rotation.y = currentRotationRef.current.y;
+        if (earthGroupRef.current) {
+          earthGroupRef.current.rotation.x = currentRotationRef.current.x;
+          earthGroupRef.current.rotation.y = currentRotationRef.current.y;
+        }
       }
 
       // Project 3D pin position to 2D Screen Coordinates (Dynamic exact bounding rect)
@@ -753,6 +765,7 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
     window.addEventListener('resize', handleResize);
 
     return () => {
+      soundEngine.pauseOrbitMusic();
       window.removeEventListener('resize', handleResize);
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
       if (renderer.domElement && renderer.domElement.parentNode) {
@@ -764,7 +777,7 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
 
   // Pointer drag controls: ROTATES NATURALLY AROUND VERTICAL AXIS
   const handlePointerDown = (e) => {
-    if (isIntro || isStoryStarting) return; // In cinematic intro view, keep camera fixed on the frame
+    if (isIntro || isStoryStarting || isTransitioningRef.current) return; // Keep camera fixed during intro & transition
     isDraggingRef.current = true;
     isAutoRotatingRef.current = false;
     previousMousePositionRef.current = {
@@ -774,7 +787,7 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
   };
 
   const handlePointerMove = (e) => {
-    if (!isDraggingRef.current) return;
+    if (!isDraggingRef.current || isTransitioningRef.current || isStoryStarting) return;
 
     const clientX = e.clientX || (e.touches && e.touches[0].clientX);
     const deltaX = clientX - previousMousePositionRef.current.x;
@@ -789,15 +802,19 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
     };
   };
 
-  // ONCE USER LEAVES OR RELEASES THE EARTH, IT STARTS AUTO ROTATING IMMEDIATELY
+  // ONCE USER LEAVES OR RELEASES THE EARTH, IT STARTS AUTO ROTATING IMMEDIATELY (Unless transitioning!)
   const handlePointerUp = () => {
     isDraggingRef.current = false;
-    isAutoRotatingRef.current = true; // Resumes auto-rotation immediately
+    if (!isTransitioningRef.current && !isStoryStarting && !isIntro) {
+      isAutoRotatingRef.current = true;
+    }
   };
 
   const handlePointerLeave = () => {
     isDraggingRef.current = false;
-    isAutoRotatingRef.current = true; // Resumes auto-rotation immediately
+    if (!isTransitioningRef.current && !isStoryStarting && !isIntro) {
+      isAutoRotatingRef.current = true;
+    }
   };
 
   // Smooth mouse wheel zoom (Disabled in Intro phase!)
@@ -853,17 +870,41 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
   // CINEMATIC STORY EXPERIENCE TRIGGERED FROM INTRO:
   // 1. Earth comes in view (rises smoothly from y = -3.28 to y = 0.0)
   // 2. Earth rotates towards India (brings Western India into center view)
-  // 3. Continuous orbital dive: starts gliding immediately, accelerates into Kutch salt desert
+  // 3. Continuous orbital dive: majestic descent into Kutch salt desert
   // 4. Dynamic dolly-zoom (FOV 38° -> 22°) expands Great Rann of Kutch
-  // 5. Seamless blur & crossfade into destination video
+  // 5. Atmospheric cloud penetration sound & crossfade into destination
   const handleStartStory = useCallback(() => {
-    if (isStoryStarting || isTransitioning) return;
+    if (isStoryStarting || isTransitioningRef.current) return;
+
+    // Automatically enter full screen on direct user click
+    try {
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch (e) {}
+
     setIsStoryStarting(true);
     setIsTransitioning(true);
+    isTransitioningRef.current = true;
     isAutoRotatingRef.current = false;
+    isDraggingRef.current = false;
 
-    // Immediately mute/fade out orbit background music when user clicks Start Story!
-    soundEngine.silenceAllBackgroundMusic();
+    // Ensure orbital music is playing during orientation towards India
+    soundEngine.playOrbitMusic(0.25);
+    // High-tech satellite target locate & acquisition sound
+    soundEngine.playLocateTargetSound();
+
+    // Kill any conflicting in-progress tweens
+    if (cameraRef.current) {
+      gsap.killTweensOf(cameraRef.current.position);
+      gsap.killTweensOf(cameraRef.current);
+    }
+    if (earthGroupRef.current) {
+      gsap.killTweensOf(earthGroupRef.current.rotation);
+    }
+    if (worldEarthRigRef.current) {
+      gsap.killTweensOf(worldEarthRigRef.current.position);
+    }
 
     const currentY = earthGroupRef.current ? earthGroupRef.current.rotation.y : currentRotationRef.current.y;
     const targetY = getShortestAngle(currentY, KUTCH_ROT_Y);
@@ -872,6 +913,8 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
       onComplete: () => {
         setIsIntro(false);
         setIsStoryStarting(false);
+        isTransitioningRef.current = false;
+        soundEngine.silenceAllBackgroundMusic();
         onSelectDestination(featuredDest);
       }
     });
@@ -880,69 +923,76 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
     if (worldEarthRigRef.current) {
       tl.to(worldEarthRigRef.current.position, {
         y: 0.0,
-        duration: 1.6,
+        duration: 1.4,
         ease: 'power2.inOut'
       }, 0);
     }
 
-    // 2. Earth rotates towards India first
-    tl.to(targetRotationRef.current, {
-      x: 0.0,
-      y: targetY,
-      duration: 2.2,
-      ease: 'power2.inOut'
-    }, 0);
-
-    // 3. Continuous orbital dive:
-    // Immediate forward push-in to eliminate hesitation
-    if (cameraRef.current) {
-      tl.to(cameraRef.current.position, {
-        z: 4.5,
-        y: 0.35,
-        duration: 1.3,
-        ease: 'power1.inOut'
+    // 2. Earth rotates AUTHORITATIVELY towards Western India (Zero lag, exact coordinate lock!)
+    if (earthGroupRef.current) {
+      tl.to(earthGroupRef.current.rotation, {
+        x: 0.0,
+        y: targetY,
+        duration: 1.8,
+        ease: 'power2.inOut',
+        onUpdate: () => {
+          if (earthGroupRef.current) {
+            currentRotationRef.current.y = earthGroupRef.current.rotation.y;
+            targetRotationRef.current.y = earthGroupRef.current.rotation.y;
+          }
+        }
       }, 0);
+    }
 
-      // Deep exhilarating acceleration straight towards Great Rann of Kutch
+    // 3. Smooth orbital dive straight towards Great Rann of Kutch, Gujarat
+    if (cameraRef.current) {
       tl.to(cameraRef.current.position, {
         x: 0,
         y: KUTCH_WORLD_Y,
         z: 2.34,
-        duration: 1.4,
-        ease: 'power3.in'
-      }, 1.3);
+        duration: 2.4,
+        ease: 'power2.inOut',
+        onStart: () => {
+          soundEngine.pauseOrbitMusic();
+          soundEngine.playOrbitalZoomDive(2.4);
+        }
+      }, 0.6);
 
-      // Cinematic dolly-zoom (narrowing FOV dramatically expands the salt flats)
+      // Dolly-zoom
       tl.to(cameraRef.current, {
         fov: 22,
-        duration: 1.4,
-        ease: 'power2.in',
+        duration: 2.4,
+        ease: 'power2.inOut',
         onUpdate: () => cameraRef.current?.updateProjectionMatrix()
-      }, 1.3);
+      }, 0.6);
     }
 
-    // 4. Seamless blur & crossfade into destination
-    if (mountRef.current) {
-      tl.to(mountRef.current, {
-        opacity: 0,
-        scale: 1.08,
-        filter: 'blur(10px)',
-        duration: 0.65,
-        ease: 'power2.out'
-      }, 2.15);
-    }
+    // Sound upon arrival
+    tl.call(() => {
+      soundEngine.playDestinationArrivedSound();
+    }, null, 2.8);
   }, [isStoryStarting, isTransitioning, onSelectDestination, featuredDest]);
 
   // CINEMATIC DIVE PRECISELY OVER GREAT RANN OF KUTCH, GUJARAT, INDIA
   const triggerTransitionToDestination = useCallback(() => {
-    if (isTransitioning) return;
+    if (isTransitioningRef.current) return;
     setIsTransitioning(true);
+    isTransitioningRef.current = true;
     isAutoRotatingRef.current = false;
+    isDraggingRef.current = false;
 
-    // Immediately mute/fade out orbit background music
-    soundEngine.silenceAllBackgroundMusic();
+    // Ensure orbit music is playing then lock target
+    soundEngine.playOrbitMusic(0.25);
+    soundEngine.playLocateTargetSound();
 
     const camera = cameraRef.current;
+    if (camera) {
+      gsap.killTweensOf(camera.position);
+      gsap.killTweensOf(camera);
+    }
+    if (earthGroupRef.current) {
+      gsap.killTweensOf(earthGroupRef.current.rotation);
+    }
     
     // Shortest angular path to bring Kutch dead-center in front of camera
     const currentY = earthGroupRef.current ? earthGroupRef.current.rotation.y : currentRotationRef.current.y;
@@ -950,50 +1000,63 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
 
     const timeline = gsap.timeline({
       onComplete: () => {
+        isTransitioningRef.current = false;
+        soundEngine.silenceAllBackgroundMusic();
         onSelectDestination(featuredDest);
       }
     });
 
-    timeline.to(targetRotationRef.current, {
-      x: 0.0,
-      y: targetY,
-      duration: 0.85,
-      ease: 'power2.inOut'
-    });
+    // 1. Smooth authoritative rotation to Gujarat, India
+    if (earthGroupRef.current) {
+      timeline.to(earthGroupRef.current.rotation, {
+        x: 0.0,
+        y: targetY,
+        duration: 1.8,
+        ease: 'power2.inOut',
+        onUpdate: () => {
+          if (earthGroupRef.current) {
+            currentRotationRef.current.y = earthGroupRef.current.rotation.y;
+            targetRotationRef.current.y = earthGroupRef.current.rotation.y;
+          }
+        }
+      }, 0);
+    }
 
-    // Camera dives DIRECTLY into Kutch (Y = 0.909, exactly where Gujarat is!)
+    // 2. Camera dives DIRECTLY into Kutch
     if (camera) {
       timeline.to(camera.position, {
         x: 0,
         y: KUTCH_WORLD_Y,
         z: 2.34,
-        duration: 1.35,
-        ease: 'power3.in',
-      }, "-=0.35");
+        duration: 2.4,
+        ease: 'power2.inOut',
+        onStart: () => {
+          soundEngine.pauseOrbitMusic();
+          soundEngine.playOrbitalZoomDive(2.4);
+        }
+      }, 0.6);
 
       timeline.to(camera, {
         fov: 22,
-        duration: 1.35,
-        ease: 'power2.in',
-        onUpdate: () => camera.updateProjectionMatrix()
-      }, "-=1.35");
+        duration: 2.4,
+        ease: 'power2.inOut',
+        onUpdate: () => camera?.updateProjectionMatrix()
+      }, 0.6);
     }
 
-    timeline.to(mountRef.current, {
-      opacity: 0,
-      scale: 1.08,
-      filter: 'blur(10px)',
-      duration: 0.6,
-      ease: 'power2.out'
-    }, "-=0.4");
-
-  }, [isTransitioning, onSelectDestination, setIsTransitioning]);
+    timeline.call(() => {
+      soundEngine.playDestinationArrivedSound();
+    }, null, 2.8);
+  }, [isTransitioning, onSelectDestination, featuredDest]);
 
   return (
     <div 
       id="globe-container"
       className="relative w-full h-screen overflow-hidden bg-[#030408] flex items-center justify-center select-none"
-      onPointerDown={handlePointerDown}
+      onPointerDown={(e) => {
+        soundEngine.playOrbitMusic(0.25);
+        handlePointerDown(e);
+      }}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerLeave}
@@ -1084,6 +1147,7 @@ export default function Globe3D({ onSelectDestination, isTransitioning, setIsTra
       ======================================================== */}
       {isIntro && (
         <div
+          onPointerDown={() => soundEngine.playOrbitMusic(0.25)}
           className={`absolute top-0 left-0 w-full h-[72vh] sm:h-[74vh] z-30 flex flex-col items-center justify-center px-4 sm:px-6 md:px-8 text-center pointer-events-auto transition-all duration-1000 ${
             isStoryStarting
               ? 'opacity-0 -translate-y-12 pointer-events-none'
